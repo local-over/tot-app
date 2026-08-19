@@ -135,9 +135,21 @@ export default function App() {
     setScreen('home');
   };
 
-  const handleLoginSuccess = (email) => {
+  const handleLoginSuccess = async (email) => {
     const isStudent = email.endsWith('.edu') || email.endsWith('.ac.uk');
     const userData = { email, loggedIn: true, loginDate: new Date().toISOString(), isStudent, plan: isStudent ? 'student' : 'free_month' };
+    
+    // Save to Appwrite backend
+    try {
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, profile, isStudent })
+      });
+    } catch (e) {
+      console.warn('Backend sync failed, falling back to local');
+    }
+
     localStorage.setItem('tot_user', JSON.stringify(userData));
     
     if (isStudent) {
@@ -154,7 +166,7 @@ export default function App() {
     }
   };
 
-  const submitFeedback = () => {
+  const submitFeedback = async () => {
     const feedbackData = {
       topicId: topic?.id || 'unknown',
       rating: ratingData.rating,
@@ -163,18 +175,34 @@ export default function App() {
       date: new Date().toISOString()
     };
     
-    const history = getFeedbackHistory();
+    // Fallback logic for local storage
+    let history = [];
+    const historyStr = localStorage.getItem('tot_feedback');
+    if (historyStr) {
+      history = JSON.parse(historyStr);
+    }
     history.push(feedbackData);
     localStorage.setItem('tot_feedback', JSON.stringify(history));
     
-    // Fire and forget
-    fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(feedbackData)
-    }).catch(() => {});
+    // Sync to Appwrite Backend
+    try {
+      const userStr = localStorage.getItem('tot_user');
+      const email = userStr ? JSON.parse(userStr).email : 'unknown';
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, feedbackData })
+      });
+    } catch (e) {
+      console.warn('Backend feedback sync failed, falling back to local');
+    }
+
+    setStreak(prev => prev + 1);
+    setScreen('reading');
     
-    setScreen('done');
+    // Reset rating
+    setRatingStep(0);
+    setRatingData({ rating: null, moreOrLess: null, length: null });
   };
 
   const handleScroll = (e) => {
@@ -588,12 +616,23 @@ export default function App() {
                   <div className="pricing-badge" style={{ top: '-10px', fontSize: '0.65rem' }}>MOST POPULAR</div>
                   <h3 className="t-heading-2" style={{ fontSize: '1.25rem' }}>Individual</h3>
                   <div style={{ fontSize: '0.875rem', color: 'var(--amber)' }}>First month free</div>
-                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '16px' }} onClick={() => {
-                    const recommended = getRecommendation(profile, getFeedbackHistory());
-                    setTopic(recommended || topics[0]);
-                    setStreak(getStreak() || 1);
-                    checkTimeReady(profile);
-                    setScreen('home');
+                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '16px' }} onClick={async () => {
+                    try {
+                      const res = await fetch('/api/checkout', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: authEmail || profile.name || 'user@tot.app', name: profile.name }),
+                        headers: { 'Content-Type': 'application/json' }
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        window.location.href = data.url;
+                      } else {
+                        alert('Failed to initiate checkout');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      alert('Checkout error');
+                    }
                   }}>Start my free month</button>
                   <p style={{ fontSize: '0.75rem', color: 'var(--white-50)', textAlign: 'center', marginTop: '8px' }}>No credit card required. $1/month after.</p>
                 </div>

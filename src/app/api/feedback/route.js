@@ -1,39 +1,30 @@
 import { NextResponse } from 'next/server';
-import { validateAuth } from '@/lib/auth';
-
-// In-memory array to store feedback
-let feedbackStore = [];
-
-export async function GET(request) {
-  if (!validateAuth(request)) {
-    return NextResponse.json(
-      { error: "Unauthorized. Provide a valid API key in the Authorization header as: Bearer <your_key>" },
-      { status: 401 }
-    );
-  }
-
-  return NextResponse.json(feedbackStore, { status: 200 });
-}
+import { createAdminClient } from '@/lib/appwrite';
+import { ID } from 'node-appwrite';
 
 export async function POST(request) {
-  const body = await request.json();
-  const { topicId, rating, moreOrLess, length, userId } = body;
+  try {
+    const { databases } = createAdminClient();
+    const body = await request.json();
+    const { email, feedbackData } = body;
 
-  if (!topicId || !rating || !moreOrLess || !length) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const result = await databases.createDocument(
+      'tot_db',
+      'feedback_history',
+      ID.unique(),
+      {
+        email,
+        rating: feedbackData.rating,
+        moreOrLess: feedbackData.moreOrLess,
+        length: feedbackData.length,
+        topicId: feedbackData.topicId,
+        date: feedbackData.date
+      }
+    );
+
+    return NextResponse.json({ success: true, documentId: result.$id });
+  } catch (error) {
+    console.error('Appwrite feedback save error:', error);
+    return NextResponse.json({ error: 'Failed to save feedback to cloud' }, { status: 500 });
   }
-
-  const feedbackEntry = {
-    id: Date.now().toString(),
-    topicId,
-    rating,
-    moreOrLess,
-    length,
-    userId,
-    createdAt: new Date().toISOString()
-  };
-
-  feedbackStore.push(feedbackEntry);
-
-  return NextResponse.json(feedbackEntry, { status: 201 });
 }
