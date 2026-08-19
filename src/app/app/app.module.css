@@ -1,0 +1,349 @@
+.container {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 1.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  background-color: #000;
+  color: var(--white-90);
+  margin: -1.5rem;
+}
+
+.splashLogo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  animation: pulseGlow 2s infinite alternate, float 4s ease-in-out infinite;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem 0;
+  gap: 1.5rem;
+  animation: fadeIn 400ms ease-out forwards;
+}
+
+.screenFull {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem 0;
+  animation: fadeIn 400ms ease-out forwards;
+}
+
+.stepDots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--surface-1);
+  transition: background-color 300ms ease;
+}
+
+.dotActive {
+  background-color: var(--amber);
+}
+
+.categoriesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.optionCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.optionCard {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.optionCard:hover {
+  border-color: var(--amber);
+  transform: translateY(-2px);
+}
+
+.optionCardSelected {
+  background-color: rgba(212, 175, 55, 0.1);
+  border-color: var(--amber);
+}
+
+.optionCardEmoji {
+  font-size: 1.5rem;
+}
+
+.optionCardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.readingContainer {
+  padding: 1rem 0 4rem;
+}
+
+.progressBarContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  z-index: 50;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: var(--amber);
+  width: 0%;
+  transition: width 100ms ease-out;
+}
+
+.articleHeader {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.articleBody {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: var(--white-90);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.closingFact {
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background-color: var(--surface-1);
+  border-left: 4px solid var(--amber);
+  border-radius: 0 12px 12px 0;
+}
+
+.ratingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-top: 2rem;
+  align-items: center;
+  text-align: center;
+}
+
+.ratingQuestion {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  animation: fadeIn 400ms ease-out forwards;
+}
+
+.ratingEmojis {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ratingEmoji {
+  font-size: 2.5rem;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ratingEmoji:hover {
+  transform: scale(1.15);
+  background-color: var(--surface-1);
+}
+
+.ratingEmojiSelected {
+  transform: scale(1.2);
+  background-color: rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+.ratingPills {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ratingPill {
+  padding: 0.75rem 1.25rem;
+  border-radius: 2rem;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  color: var(--white-90);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.ratingPill:hover {
+  border-color: var(--amber);
+}
+
+.ratingPillSelected {
+  background-color: var(--amber);
+  color: #000;
+  border-color: var(--amber);
+}
+
+.doneScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  gap: 1.5rem;
+}
+
+.checkmark {
+  width: 80px;
+  height: 80px;
+  color: var(--amber);
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.streakBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.homeScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  gap: 2rem;
+}
+
+.homeLogo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+  margin-bottom: 1rem;
+}
+
+.countdown {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--amber);
+  margin: 1rem 0;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.bottomActions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  color: var(--white-90);
+  font-size: 1.125rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--amber);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulseGlow {
+  from { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+  to { box-shadow: 0 0 40px rgba(212, 175, 55, 0.6); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
