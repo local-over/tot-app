@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@/lib/appwrite';
 import styles from './app.module.css';
 import Logo from '@/components/Logo';
 import { useRouter } from 'next/navigation';
@@ -39,43 +40,76 @@ export default function App() {
   const [authEmail, setAuthEmail] = useState('');
   const [authStep, setAuthStep] = useState('email'); // email or code
   const [authCode, setAuthCode] = useState('');
+  const [bypassDesktop, setBypassDesktop] = useState(false);
 
   useEffect(() => {
     if (window.innerWidth > 768) {
       setIsDesktop(true);
     }
-    const userStr = localStorage.getItem('tot_user');
-    let loggedInUser = null;
-    try {
-      if (userStr) loggedInUser = JSON.parse(userStr);
-    } catch (e) {}
-
-    setIsAuthChecked(true);
-
-    const savedProfile = localStorage.getItem('tot_profile');
-    if (savedProfile) {
+    const checkAppwriteSession = async () => {
       try {
-        const parsed = JSON.parse(savedProfile);
-        if (parsed.setupComplete) {
-          setProfile(parsed);
-          
-          if (!loggedInUser || !loggedInUser.loggedIn) {
-            setTimeout(() => setScreen('signup'), 2500);
+        const { account } = createClient();
+        const session = await account.get();
+        if (session) {
+          const email = session.email;
+          const isStudent = email.endsWith('.edu') || email.endsWith('.ac.uk');
+          const userData = { email, loggedIn: true, loginDate: new Date().toISOString(), isStudent, plan: isStudent ? 'student' : 'free_month' };
+          localStorage.setItem('tot_user', JSON.stringify(userData));
+          return true;
+        }
+      } catch (error) {
+        // No valid Appwrite session
+      }
+      return false;
+    };
+
+    const runInit = async () => {
+      let loggedInUser = null;
+      const isValidAppwrite = await checkAppwriteSession();
+      
+      const userStr = localStorage.getItem('tot_user');
+      try {
+        if (userStr) loggedInUser = JSON.parse(userStr);
+      } catch (e) {}
+
+      if (isValidAppwrite && (!loggedInUser || !loggedInUser.loggedIn)) {
+        // Appwrite logged us in!
+        loggedInUser = JSON.parse(localStorage.getItem('tot_user'));
+      } else if (!isValidAppwrite && loggedInUser && loggedInUser.loggedIn) {
+        // Invalid Appwrite session but local says logged in? Log them out!
+        localStorage.removeItem('tot_user');
+        loggedInUser = null;
+      }
+
+      setIsAuthChecked(true);
+
+      const savedProfile = localStorage.getItem('tot_profile');
+      if (savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          if (parsed.setupComplete) {
+            setProfile(parsed);
+            
+            if (!loggedInUser || !loggedInUser.loggedIn) {
+              setTimeout(() => setScreen('signup'), 2500);
+              return;
+            }
+
+            checkTimeReady(parsed);
+            const recommended = getRecommendation(parsed, getFeedbackHistory());
+            setTopic(recommended || topics[0]);
+            setStreak(getStreak() || 1);
+            
+            setTimeout(() => setScreen('home'), 2500);
             return;
           }
+        } catch (e) {}
+      }
+      
+      setTimeout(() => setScreen('welcome'), 2500);
+    };
 
-          checkTimeReady(parsed);
-          const recommended = getRecommendation(parsed, getFeedbackHistory());
-          setTopic(recommended || topics[0]);
-          setStreak(getStreak() || 1);
-          
-          setTimeout(() => setScreen('home'), 2500);
-          return;
-        }
-      } catch (e) {}
-    }
-    
-    setTimeout(() => setScreen('welcome'), 2500);
+    runInit();
   }, []);
 
   const getFeedbackHistory = () => {
@@ -133,6 +167,19 @@ export default function App() {
     checkTimeReady(data);
     
     setScreen('home');
+  };
+
+  const handleGoogleLogin = () => {
+    try {
+      const { account } = createClient();
+      account.createOAuth2Session(
+        'google',
+        'https://tot-app.pages.dev/app',
+        'https://tot-app.pages.dev/app'
+      );
+    } catch (error) {
+      console.error('OAuth initiation failed', error);
+    }
   };
 
   const handleLoginSuccess = async (email) => {
@@ -245,19 +292,22 @@ export default function App() {
 
   if (!isAuthChecked) return null;
 
-  if (isDesktop) {
+  if (isDesktop && !bypassDesktop) {
     return (
       <div className="app-desktop-shell">
         <div className="app-desktop-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px' }}>
           <Logo size={80} glow />
-          <h2 className="t-heading-1" style={{ marginTop: '24px', marginBottom: '16px' }}>TOT is mobile-only</h2>
+          <h2 className="t-heading-1" style={{ marginTop: '24px', marginBottom: '16px' }}>TOT is mobile-first</h2>
           <p className="t-body" style={{ color: 'var(--white-70)', marginBottom: '32px', maxWidth: '300px' }}>
-            To keep you focused, the daily reading experience is designed exclusively for your phone.
+            To keep you focused, the daily reading experience is designed primarily for your phone.
           </p>
           <div style={{ background: '#fff', padding: '16px', borderRadius: '16px', marginBottom: '24px' }}>
             <QRCode value="https://tot-app.com/app" size={150} />
           </div>
-          <p className="t-caption">Scan to open on your phone</p>
+          <p className="t-caption" style={{ marginBottom: '24px' }}>Scan to open on your phone</p>
+          <button className="btn btn-ghost" onClick={() => setBypassDesktop(true)}>
+            Use on desktop anyway
+          </button>
         </div>
       </div>
     );
@@ -540,44 +590,9 @@ export default function App() {
                 Continue with Google
               </button>
 
-              <div style={{ margin: '16px 0', color: 'var(--white-50)', fontSize: '0.875rem' }}>or continue with email</div>
-              
-              {authStep === 'email' ? (
-                <>
-                  <input 
-                    type="email" 
-                    className={styles.input} 
-                    placeholder="Enter your email" 
-                    value={authEmail} 
-                    onChange={e => setAuthEmail(e.target.value)} 
-                  />
-                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} onClick={() => {
-                    if (authEmail.includes('@')) setAuthStep('code');
-                  }}>
-                    Send Code
-                  </button>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--white-50)', marginTop: '16px' }}>Student? Use your .edu email to skip payment.</p>
-                </>
-              ) : (
-                <>
-                  <input 
-                    type="text" 
-                    className={styles.input} 
-                    placeholder="Enter 6-digit code" 
-                    value={authCode} 
-                    onChange={e => setAuthCode(e.target.value)} 
-                    maxLength={6}
-                  />
-                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} onClick={() => {
-                    if (authCode.length > 3) handleLoginSuccess(authEmail);
-                  }}>
-                    Sign In
-                  </button>
-                  <button className="btn btn-ghost" style={{ width: '100%', marginTop: '8px' }} onClick={() => setAuthStep('email')}>
-                    Back
-                  </button>
-                </>
-              )}
+              <div style={{ marginTop: '24px', fontSize: '0.875rem', color: 'var(--white-50)' }}>
+                Student? Sign in with your .edu Google Account to automatically skip payment.
+              </div>
             </div>
           </div>
         </div>
