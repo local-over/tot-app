@@ -40,7 +40,6 @@ export default function App() {
   const [authEmail, setAuthEmail] = useState('');
   const [authStep, setAuthStep] = useState('email'); // email or code
   const [authCode, setAuthCode] = useState('');
-  const [bypassDesktop, setBypassDesktop] = useState(false);
 
   useEffect(() => {
     if (window.innerWidth > 768) {
@@ -292,26 +291,7 @@ export default function App() {
 
   if (!isAuthChecked) return null;
 
-  if (isDesktop && !bypassDesktop) {
-    return (
-      <div className="app-desktop-shell">
-        <div className="app-desktop-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px' }}>
-          <Logo size={80} glow />
-          <h2 className="t-heading-1" style={{ marginTop: '24px', marginBottom: '16px' }}>TOT is mobile-first</h2>
-          <p className="t-body" style={{ color: 'var(--white-70)', marginBottom: '32px', maxWidth: '300px' }}>
-            To keep you focused, the daily reading experience is designed primarily for your phone.
-          </p>
-          <div style={{ background: '#fff', padding: '16px', borderRadius: '16px', marginBottom: '24px' }}>
-            <QRCode value="https://tot-app.com/app" size={150} />
-          </div>
-          <p className="t-caption" style={{ marginBottom: '24px' }}>Scan to open on your phone</p>
-          <button className="btn btn-ghost" onClick={() => setBypassDesktop(true)}>
-            Use on desktop anyway
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   if (screen === 'splash') {
     return (
@@ -590,9 +570,44 @@ export default function App() {
                 Continue with Google
               </button>
 
-              <div style={{ marginTop: '24px', fontSize: '0.875rem', color: 'var(--white-50)' }}>
-                Student? Sign in with your .edu Google Account to automatically skip payment.
-              </div>
+              <div style={{ margin: '16px 0', color: 'var(--white-50)', fontSize: '0.875rem' }}>or continue with email</div>
+              
+              {authStep === 'email' ? (
+                <>
+                  <input 
+                    type="email" 
+                    className={styles.input} 
+                    placeholder="Enter your email" 
+                    value={authEmail} 
+                    onChange={e => setAuthEmail(e.target.value)} 
+                  />
+                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} onClick={() => {
+                    if (authEmail.includes('@')) setAuthStep('code');
+                  }}>
+                    Send Code
+                  </button>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--white-50)', marginTop: '16px' }}>Student? Use your .edu email to skip payment.</p>
+                </>
+              ) : (
+                <>
+                  <input 
+                    type="text" 
+                    className={styles.input} 
+                    placeholder="Enter 4-digit code" 
+                    value={authCode} 
+                    onChange={e => setAuthCode(e.target.value)} 
+                    maxLength={4}
+                  />
+                  <button className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} onClick={() => {
+                    if (authCode.length >= 4) handleLoginSuccess(authEmail);
+                  }}>
+                    Sign In
+                  </button>
+                  <button className="btn btn-ghost" style={{ width: '100%', marginTop: '8px' }} onClick={() => setAuthStep('email')}>
+                    Back
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
