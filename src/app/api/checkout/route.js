@@ -20,7 +20,7 @@ export async function POST(request) {
         email: email || 'customer@example.com',
         name: name || 'TOT Reader',
       },
-      return_url: 'https://tot-app.pages.dev/app?success=true',
+      return_url: 'https://theonetopic.me/app?success=true',
     });
 
     return NextResponse.json({ url: session.checkout_url });

@@ -173,8 +173,8 @@ export default function App() {
       const { account } = createClient();
       account.createOAuth2Session(
         'google',
-        'https://tot-app.pages.dev/app',
-        'https://tot-app.pages.dev/app'
+        'https://theonetopic.me/app',
+        'https://theonetopic.me/app'
       );
     } catch (error) {
       console.error('OAuth initiation failed', error);
