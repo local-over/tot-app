@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { categories } from '@/data/categories';
 import { validateAuth } from '@/lib/auth';

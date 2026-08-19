@@ -1,4 +1,4 @@
-import { Client, Databases, Users, Account } from 'node-appwrite';
+import { Client, Databases, Account } from 'appwrite';
 
 export function createAdminClient() {
   const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
@@ -16,7 +16,6 @@ export function createAdminClient() {
 
   return {
     get account() { return new Account(client); },
-    get databases() { return new Databases(client); },
-    get users() { return new Users(client); }
+    get databases() { return new Databases(client); }
   };
 }

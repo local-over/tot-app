@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import DodoPayments from 'dodopayments';
 
@@ -19,7 +20,7 @@ export async function POST(request) {
         email: email || 'customer@example.com',
         name: name || 'TOT Reader',
       },
-      return_url: 'http://localhost:3000/app?success=true',
+      return_url: 'https://tot-app.pages.dev/app?success=true',
     });
 
     return NextResponse.json({ url: session.checkout_url });
