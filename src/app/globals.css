@@ -497,10 +497,7 @@ body {
 
 @media (max-width: 640px) {
   .nav-links {
-    gap: var(--sp-4);
-  }
-  .nav-link:not(.nav-link-cta) {
-    display: none;
+    gap: var(--sp-3);
   }
 }
 
@@ -687,7 +684,21 @@ body {
   margin-top: var(--sp-1);
 }
 
-/* ── Desktop Container for App ─────────────────── */
+/* ── Container for App ─────────────────── */
+.app-desktop-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--black);
+}
+
+.app-desktop-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 @media (min-width: 768px) {
   .app-desktop-shell {
     display: flex;

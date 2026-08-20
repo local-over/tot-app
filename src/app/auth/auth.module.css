@@ -1,0 +1,121 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  min-height: 100dvh;
+  text-align: center;
+}
+
+.inner {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--white-30);
+  font-size: 0.8125rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.backLink {
+  color: var(--white-30);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.backLink:hover {
+  color: var(--white-70);
+}
+
+.codeInputs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.codeInput {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--white);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.codeInput:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-glow);
+}
+
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: var(--sp-4) var(--sp-8);
+  border-radius: var(--radius-pill);
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-subtle);
+  color: var(--white-90);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.googleBtn:hover {
+  border-color: var(--border-medium);
+  background: var(--surface-2);
+}
+
+.googleBtn svg {
+  width: 18px;
+  height: 18px;
+}

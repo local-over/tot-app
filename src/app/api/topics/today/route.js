@@ -9,7 +9,7 @@ export async function GET(request) {
   const categoriesParam = searchParams.get('categories');
   const readingStyle = searchParams.get('readingStyle');
 
-  let userPreferences = {};
+  let userPreferences = { categories: [] };
   if (categoriesParam) {
     userPreferences.categories = categoriesParam.split(',');
   }
@@ -21,7 +21,7 @@ export async function GET(request) {
   }
 
   try {
-    const recommendedTopic = getRecommendation(userPreferences, topics);
+    const recommendedTopic = getRecommendation(userPreferences, []);
     return NextResponse.json(recommendedTopic, { status: 200 });
   } catch (error) {
     // If getRecommendation is missing or fails

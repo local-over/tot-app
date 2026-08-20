@@ -11,15 +11,14 @@ export async function POST(request) {
 
     const result = await databases.createDocument(
       'tot_db',
-      'feedback_history',
+      'feedback',
       ID.unique(),
       {
-        email,
+        userId: email,
         rating: feedbackData.rating,
         moreOrLess: feedbackData.moreOrLess,
         length: feedbackData.length,
-        topicId: feedbackData.topicId,
-        date: feedbackData.date
+        topicId: feedbackData.topicId
       }
     );
 

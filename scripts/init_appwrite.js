@@ -30,6 +30,13 @@ async function init() {
       await databases.createStringAttribute(dbId, 'users', 'name', 255, false);
       await databases.createBooleanAttribute(dbId, 'users', 'isStudent', false, false, false);
       await databases.createStringAttribute(dbId, 'users', 'plan', 50, false, 'free');
+      
+      // New profile attributes
+      await databases.createStringAttribute(dbId, 'users', 'categories', 50, false, null, true); // array of strings
+      await databases.createStringAttribute(dbId, 'users', 'readingStyle', 50, false, '');
+      await databases.createStringAttribute(dbId, 'users', 'contentVibe', 50, false, '');
+      await databases.createStringAttribute(dbId, 'users', 'readingTime', 50, false, '');
+      await databases.createIntegerAttribute(dbId, 'users', 'streak', false, 0, 10000, 0);
       console.log('Users collection created.');
     } catch (e) {
       if (e.code === 409) console.log('Users collection already exists.');

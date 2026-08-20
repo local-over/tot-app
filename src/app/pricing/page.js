@@ -28,7 +28,7 @@ export default function PricingPage() {
                 <li>Reading streak tracking</li>
               </ul>
               
-              <Link href="/login" className="btn btn-secondary btn-full">
+              <Link href="/verify-student" className="btn btn-secondary btn-full">
                 Verify with .edu email
               </Link>
               <div className={styles.cardNote}>Valid university email required</div>

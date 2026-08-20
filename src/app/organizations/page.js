@@ -40,9 +40,9 @@ export default function Organizations() {
             <div className={styles.planSeats}>Up to 25 seats</div>
             <div className="t-display">$5<span className="t-body">/seat/month</span></div>
             <ul className="pricing-features">
-              <li>✓ Team dashboard</li>
-              <li>✓ All categories</li>
-              <li>✓ Email support</li>
+              <li>Team dashboard</li>
+              <li>All categories</li>
+              <li>Email support</li>
             </ul>
           </div>
           <div className="pricing-card">
@@ -50,12 +50,12 @@ export default function Organizations() {
             <div className={styles.planSeats}>Up to 100 seats</div>
             <div className="t-display">$4<span className="t-body">/seat/month</span></div>
             <ul className="pricing-features">
-              <li>✓ Team dashboard</li>
-              <li>✓ All categories</li>
-              <li>✓ Email support</li>
-              <li>✓ Custom categories</li>
-              <li>✓ Analytics export</li>
-              <li>✓ Priority support</li>
+              <li>Team dashboard</li>
+              <li>All categories</li>
+              <li>Email support</li>
+              <li>Custom categories</li>
+              <li>Analytics export</li>
+              <li>Priority support</li>
             </ul>
           </div>
           <div className="pricing-card">
@@ -63,11 +63,11 @@ export default function Organizations() {
             <div className={styles.planSeats}>Unlimited seats</div>
             <div className="t-display">Custom</div>
             <ul className="pricing-features">
-              <li>✓ Everything in Growth</li>
-              <li>✓ SSO/SAML</li>
-              <li>✓ Custom content</li>
-              <li>✓ Dedicated manager</li>
-              <li>✓ API access</li>
+              <li>Everything in Growth</li>
+              <li>SSO/SAML</li>
+              <li>Custom content</li>
+              <li>Dedicated manager</li>
+              <li>API access</li>
             </ul>
           </div>
         </div>

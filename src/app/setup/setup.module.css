@@ -1,0 +1,144 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 32px;
+}
+
+.backBtn {
+  position: absolute;
+  left: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 0;
+  opacity: 0.8;
+}
+
+.backBtn:hover {
+  opacity: 1;
+}
+
+.stepDots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--surface-1, #333);
+  transition: background-color 0.2s ease;
+}
+
+.dotActive {
+  background-color: var(--accent-amber, #F5A623);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 400ms ease-out forwards;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+  background: var(--surface-1, #1A1A1A);
+  border: 1px solid var(--border-subtle, #333);
+  border-radius: 12px;
+  padding: 16px;
+  color: inherit;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--accent-amber, #F5A623);
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: var(--surface-1, #1A1A1A);
+  border: 1px solid var(--border-subtle, #333);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cardActive {
+  border-color: var(--accent-amber, #F5A623);
+  background-color: var(--surface-2, #2A2A2A);
+}
+
+.cardEmoji {
+  font-size: 24px;
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  font-weight: 500;
+}
+
+.cardDesc {
+  opacity: 0.7;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 24px;
+}

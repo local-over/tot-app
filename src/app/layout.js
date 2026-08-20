@@ -24,10 +24,16 @@ export const metadata = {
   },
 };
 
+import { UserProvider } from "@/context/UserContext";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <UserProvider>
+          {children}
+        </UserProvider>
+      </body>
     </html>
   );
 }
