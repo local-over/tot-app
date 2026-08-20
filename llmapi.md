@@ -141,3 +141,11 @@ The system only supports passing a **single** primary `categoryId` string. Howev
 When you write a cross-article, you should:
 1. Write the content to appeal to multiple interests.
 2. For the `categoryId` field, simply pass the **primary** category ID that fits best, or safely pass a comma-separated string like `"technology, business"`. The frontend will gracefully fallback if the exact string doesn't perfectly match a single icon, so multi-string categories are allowed!
+
+## Reading Lengths (readTime)
+
+When creating or editing an article, the `readTime` field must be an integer representing the estimated reading time in minutes. Try to generate articles that fit into these general buckets based on user preferences:
+
+- **Quick bites (Small):** `2` to `3` minutes.
+- **Average (Mix):** `3` to `5` minutes.
+- **Deep dives (Long):** `5` to `8` minutes.
