@@ -4,7 +4,7 @@ import DodoPayments from 'dodopayments';
 
 const dodo = new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY,
-  environment: 'test_mode',
+  environment: 'live_mode',
 });
 
 export async function POST(request) {
@@ -21,6 +21,12 @@ export async function POST(request) {
         name: name || 'TOT Reader',
       },
       return_url: 'https://theonetopic.me/gate?success=true',
+      cancel_url: 'https://theonetopic.me/gate',
+      minimal_address: true,
+      feature_flags: {
+        allow_discount_code: true,
+        allow_phone_number_collection: false,
+      }
     });
 
     return NextResponse.json({ url: session.checkout_url });
