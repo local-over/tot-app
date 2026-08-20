@@ -49,7 +49,10 @@ function GateContent() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user?.email })
+        body: JSON.stringify({ 
+          email: user?.email,
+          name: profile?.name
+        })
       });
       const data = await res.json();
       if (data.url) {
