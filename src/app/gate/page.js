@@ -8,7 +8,7 @@ import DeviceGuard from '@/components/DeviceGuard';
 import styles from './gate.module.css';
 
 function GateContent() {
-  const { user, isLoading, hasCompletedGate, updateProfile } = useUser();
+  const { user, profile, isLoading, hasCompletedGate, updateProfile } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   
