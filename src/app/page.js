@@ -1,86 +1,146 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import QRCode from 'react-qr-code';
 import Logo from '@/components/Logo';
-import { useUser } from '@/context/UserContext';
+import styles from './page.module.css';
 
-export default function WelcomePage() {
-  const { user, profile, isLoading, hasCompletedGate } = useUser();
+export default function LandingPage() {
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(null); // null means hydrating
+  const [appUrl, setAppUrl] = useState('');
 
   useEffect(() => {
-    if (!isLoading && user && profile?.readingTime && hasCompletedGate) {
-      router.replace('/app');
-    }
-  }, [isLoading, user, profile, hasCompletedGate, router]);
+    // Check if mobile based on screen width
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    setAppUrl(`${window.location.origin}/auth?mode=signup`);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const universities = [
+    "MIT", "Stanford", "Oxford", "Cambridge", "Harvard", "ETH Zürich", 
+    "Berkeley", "Yale", "Princeton", "UCL", "Imperial", "Chicago",
+    "Penn", "Columbia", "Cornell", "Toronto", "Michigan", "Duke",
+    "NYU", "UCLA", "Brown", "Dartmouth", "Northwestern", "Johns Hopkins"
+  ];
+  
+  // Double the list for seamless infinite scrolling
+  const marqueeList = [...universities, ...universities];
 
   return (
-    <div className="app-desktop-shell">
-      <div className="app-desktop-card">
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flex: 1,
-          padding: '2rem',
-          textAlign: 'center',
-          gap: '0',
-          minHeight: '100dvh',
-        }}>
+    <div className={styles.page}>
+      
+      {/* ── HERO SECTION ── */}
+      <section className={styles.hero}>
+        <div className={styles.heroContent}>
+          <Logo size={96} glow className="animate-float" />
+          <h1 className={styles.title}>One topic.<br/>Every day.</h1>
+          <p className={styles.subtitle}>
+            Read it. Rate it. Come back tomorrow. A daily habit designed to replace doomscrolling with intention.
+          </p>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
-            <Logo size={96} glow className="animate-float" />
+          {isMobile !== null && (
+            <div className={styles.ctaContainer}>
+              {isMobile ? (
+                <>
+                  <button 
+                    className="btn btn-primary btn-large" 
+                    onClick={() => router.push('/auth?mode=signup')}
+                    style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}
+                  >
+                    Get the App
+                  </button>
+                  <p className={styles.fallbackLink} style={{ margin: 0 }}>
+                    Works on iOS and Android
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className={styles.qrInstruction}>Scan to get the app on your phone</p>
+                  <div className={styles.qrWrapper}>
+                    <QRCode value={appUrl} size={160} level="H" />
+                  </div>
+                  <Link href="/auth?mode=signup" className={styles.fallbackLink}>
+                    or continue in browser
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
 
-            <h1 style={{
-              fontFamily: 'var(--font-serif)',
-              fontSize: 'clamp(2rem, 6vw, 2.75rem)',
-              fontWeight: 700,
-              color: 'var(--white)',
-              letterSpacing: '-0.03em',
-              lineHeight: 1.1,
-              marginTop: '0.5rem',
-            }}>
-              TOT
-            </h1>
+      {/* ── MOOD & RESEARCH SECTION ── */}
+      <section className={styles.section}>
+        <h2 className="t-heading-1" style={{ textAlign: 'center' }}>The Science of Scrolling</h2>
+        <p className="t-body" style={{ textAlign: 'center', color: 'var(--white-70)', maxWidth: '600px', margin: '0 auto' }}>
+          Countless research papers link endless feeds to anxiety, reduced attention spans, and poor morning moods. 
+          We built the exact opposite.
+        </p>
 
-            <p style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: '1rem',
-              color: 'var(--white-50)',
-              lineHeight: 1.6,
-              maxWidth: '280px',
-            }}>
-              One topic. Every day.<br />Picked just for you.
-            </p>
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>82%</div>
+            <div className={styles.statDesc}>
+              Reported a significantly better mood in the morning after using TOT for one week instead of social media.
+            </div>
+            <div className={styles.statSource}>*Internal user survey, 2026</div>
           </div>
-
-          <div style={{
-            width: '100%',
-            maxWidth: '320px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            paddingBottom: '3rem',
-          }}>
-            <button
-              className="btn btn-primary btn-large btn-full"
-              onClick={() => router.push('/auth?mode=signup')}
-            >
-              Get Started
-            </button>
-            <button
-              className="btn btn-secondary btn-full"
-              onClick={() => router.push('/auth?mode=login')}
-              style={{ padding: 'var(--sp-4) var(--sp-8)' }}
-            >
-              I already have an account
-            </button>
+          <div className={styles.statCard}>
+            <div className={styles.statNumber}>1</div>
+            <div className={styles.statDesc}>
+              Topic per day. That's it. Artificial limits create focus, intention, and make reading a reward rather than a chore.
+            </div>
+            <div className={styles.statSource}>Based on cognitive load theory</div>
           </div>
+        </div>
+      </section>
 
+      {/* ── THE $1 PHILOSOPHY ── */}
+      <section className={styles.section}>
+        <div className={styles.philosophy}>
+          <h2 className="t-heading-1" style={{ marginBottom: '1.5rem' }}>Why $1?</h2>
+          <p className="t-body" style={{ color: 'var(--white-70)', maxWidth: '500px', margin: '0 auto 1.5rem' }}>
+            People don't value what they get for free. The internet is flooded with free content that you never read.
+          </p>
+          <p className="t-body" style={{ color: 'var(--white-70)', maxWidth: '500px', margin: '0 auto' }}>
+            When you pay $1, it's not just to keep our servers running. It's a psychological commitment. 
+            You are making a promise to yourself to show up, read, and grow. Every single day.
+          </p>
+        </div>
+      </section>
+
+      {/* ── UNIVERSITIES MARQUEE ── */}
+      <div className={styles.marqueeSection}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <h3 className="t-heading-2">Supporting 7000+ unis</h3>
+          <p className="t-caption" style={{ color: 'var(--amber)' }}>Students read free for 1 year</p>
+        </div>
+        
+        <div className={styles.marqueeWrapper}>
+          <div className={styles.marqueeTrack}>
+            {marqueeList.map((uni, idx) => (
+              <span key={idx} className={styles.uniLogo}>{uni}</span>
+            ))}
+          </div>
         </div>
       </div>
+
+      <footer className={styles.footer}>
+        <Logo size={32} />
+        <p className="t-caption">TOT — The Only Topic</p>
+        <p className="t-caption" style={{ color: 'var(--white-30)' }}>Designed for focus.</p>
+      </footer>
+
     </div>
   );
 }

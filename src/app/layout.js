@@ -13,10 +13,20 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport = {
+  themeColor: "#000000",
+};
+
 export const metadata = {
   title: "TOT — The Only Topic",
   description: "One topic per day. Picked for you. Read it. Rate it. Come back tomorrow.",
   keywords: "daily reading, learning, topics, knowledge, reading habit",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "TOT",
+  },
   openGraph: {
     title: "TOT — The Only Topic",
     description: "One topic per day. Picked for you.",
