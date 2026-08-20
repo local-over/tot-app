@@ -1,19 +1,15 @@
 import Image from 'next/image';
 
-export default function Logo({ size = 80, glow = false, className = '' }) {
-  const glowStyle = glow
-    ? { filter: 'drop-shadow(0 0 24px rgba(245, 166, 35, 0.35))' }
-    : {};
-
+export default function Logo({ size = 80, className = '' }) {
   return (
-    <Image
-      src="/logo.png"
-      alt="TOT Logo"
-      width={size}
-      height={size}
-      className={className}
-      style={{ ...glowStyle, objectFit: 'contain' }}
-      priority
-    />
+    <div style={{ width: size, height: size, position: 'relative' }} className={className}>
+      <Image
+        src="/logo.png"
+        alt="TOT Logo"
+        fill
+        style={{ objectFit: 'contain' }}
+        priority
+      />
+    </div>
   );
 }

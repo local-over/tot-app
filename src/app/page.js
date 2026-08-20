@@ -38,44 +38,48 @@ export default function LandingPage() {
 
   return (
     <div className={styles.page}>
-      
+      {/* ── NAV SECTION ── */}
+      <nav className={styles.nav}>
+        <Logo size={48} />
+      </nav>
+
       {/* ── HERO SECTION ── */}
       <section className={styles.hero}>
-        <div className={styles.heroContent}>
-          <Logo size={96} glow className="animate-float" />
-          <h1 className={styles.title}>One topic.<br/>Every day.</h1>
-          <p className={styles.subtitle}>
-            Read it. Rate it. Come back tomorrow. A daily habit designed to replace doomscrolling with intention.
-          </p>
+        <div className={styles.heroGrid}>
+          
+          <div className={styles.heroContent}>
+            <h1 className={styles.title}>One topic.<br/>Every day.</h1>
+            <p className={styles.subtitle}>
+              Read it. Rate it. Come back tomorrow. A daily habit designed to replace doomscrolling with intention.
+            </p>
+            {isMobile === true && (
+              <div className={styles.ctaContainer} style={{ alignSelf: 'flex-start', marginTop: '1rem', width: '100%', maxWidth: '100%' }}>
+                <button 
+                  className="btn btn-primary btn-large btn-full" 
+                  onClick={() => router.push('/auth?mode=signup')}
+                  style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}
+                >
+                  Get the App
+                </button>
+                <p className={styles.fallbackLink} style={{ margin: '1rem auto 0', textAlign: 'center', width: '100%' }}>
+                  Works on iOS and Android
+                </p>
+              </div>
+            )}
+          </div>
 
-          {isMobile !== null && (
-            <div className={styles.ctaContainer}>
-              {isMobile ? (
-                <>
-                  <button 
-                    className="btn btn-primary btn-large" 
-                    onClick={() => router.push('/auth?mode=signup')}
-                    style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}
-                  >
-                    Get the App
-                  </button>
-                  <p className={styles.fallbackLink} style={{ margin: 0 }}>
-                    Works on iOS and Android
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className={styles.qrInstruction}>Scan to get the app on your phone</p>
-                  <div className={styles.qrWrapper}>
-                    <QRCode value={appUrl} size={160} level="H" />
-                  </div>
-                  <Link href="/auth?mode=signup" className={styles.fallbackLink}>
-                    or continue in browser
-                  </Link>
-                </>
-              )}
+          {isMobile === false && (
+            <div className={styles.ctaContainer} style={{ alignSelf: 'center', margin: '0 auto', maxWidth: '340px' }}>
+              <p className={styles.qrInstruction}>Scan to get the app on your phone</p>
+              <div className={styles.qrWrapper}>
+                <QRCode value={appUrl} size={180} level="H" />
+              </div>
+              <Link href="/auth?mode=signup" className={styles.fallbackLink}>
+                or continue in browser
+              </Link>
             </div>
           )}
+
         </div>
       </section>
 
