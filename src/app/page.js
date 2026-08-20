@@ -40,7 +40,10 @@ export default function LandingPage() {
     <div className={styles.page}>
       {/* ── NAV SECTION ── */}
       <nav className={styles.nav}>
-        <Logo size={48} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Logo size={40} />
+          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 700 }}>TOT</span>
+        </div>
       </nav>
 
       {/* ── HERO SECTION ── */}
@@ -140,8 +143,11 @@ export default function LandingPage() {
       </div>
 
       <footer className={styles.footer}>
-        <Logo size={32} />
-        <p className="t-caption">TOT — The Only Topic</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
+          <Logo size={24} />
+          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.125rem', fontWeight: 600 }}>TOT</span>
+        </div>
+        <p className="t-caption">The Only Topic</p>
         <p className="t-caption" style={{ color: 'var(--white-30)' }}>Designed for focus.</p>
       </footer>
 
