@@ -9,7 +9,7 @@ import { categories as allCategories, readingTimes } from '@/data/categories';
 import DeviceGuard from '@/components/DeviceGuard';
 
 function AppContent() {
-  const { user, profile, isLoading, hasCompletedGate, updateProfile } = useUser();
+  const { user, profile, isLoading, hasCompletedGate, updateProfile, logout } = useUser();
   const router = useRouter();
 
   const [screen, setScreen] = useState('splash');
@@ -22,6 +22,53 @@ function AppContent() {
   const [ratingData, setRatingData] = useState({
     rating: null, moreOrLess: null, length: null
   });
+
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [historyTab, setHistoryTab] = useState('marked');
+  const [userHistory, setUserHistory] = useState([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isMarking, setIsMarking] = useState(false);
+
+  const fetchHistory = async () => {
+    setIsHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/user/history?userId=${user?.id || user?.email}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserHistory(data.history || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsHistoryLoading(false);
+  };
+
+  useEffect(() => {
+    if (showProfileMenu) fetchHistory();
+  }, [showProfileMenu]);
+
+  const toggleMark = async (assignmentId, currentMarkedStatus) => {
+    if (isMarking || !assignmentId) return;
+    setIsMarking(true);
+    try {
+      const res = await fetch('/api/user/mark', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId, isMarked: !currentMarkedStatus })
+      });
+      if (res.ok) {
+        setUserHistory(prev => prev.map(h => 
+          h.id === assignmentId ? { ...h, isMarked: !currentMarkedStatus } : h
+        ));
+        if (topic && topic.assignmentId === assignmentId) {
+          setTopic(prev => ({ ...prev, isMarked: !currentMarkedStatus }));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsMarking(false);
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -109,6 +156,67 @@ function AppContent() {
     setRatingData({ rating: null, moreOrLess: null, length: null });
   };
 
+  const renderProfileModal = () => {
+    if (!showProfileMenu) return null;
+    const displayedHistory = historyTab === 'marked' 
+      ? userHistory.filter(h => h.isMarked) 
+      : userHistory;
+
+    return (
+      <div className={styles.profileModalOverlay} onClick={() => setShowProfileMenu(false)}>
+        <div className={styles.profileModal} onClick={e => e.stopPropagation()}>
+          <div className={styles.profileModalHeader}>
+            <h2 className="t-heading-2">Profile</h2>
+            <button className={styles.closeBtn} onClick={() => setShowProfileMenu(false)}>&times;</button>
+          </div>
+          <div className={styles.tabBar}>
+            <button 
+              className={`${styles.tab} ${historyTab === 'marked' ? styles.tabActive : ''}`}
+              onClick={() => setHistoryTab('marked')}
+            >
+              Saved
+            </button>
+            <button 
+              className={`${styles.tab} ${historyTab === 'history' ? styles.tabActive : ''}`}
+              onClick={() => setHistoryTab('history')}
+            >
+              History
+            </button>
+          </div>
+          <div className={styles.profileModalBody}>
+            {isHistoryLoading ? (
+              <p style={{ textAlign: 'center', color: 'var(--white-60)' }}>Loading...</p>
+            ) : displayedHistory.length > 0 ? (
+              displayedHistory.map(item => (
+                <div key={item.id} className={styles.historyItem}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span className={styles.historyDate}>{item.date}</span>
+                    <button 
+                      className={`${styles.bookmarkBtn} ${item.isMarked ? styles.bookmarkBtnActive : ''}`}
+                      onClick={() => toggleMark(item.id, item.isMarked)}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={item.isMarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <h3 className={styles.historyTitle}>{item.title}</h3>
+                </div>
+              ))
+            ) : (
+              <p style={{ textAlign: 'center', color: 'var(--white-60)' }}>
+                {historyTab === 'marked' ? 'No saved articles yet.' : 'No reading history yet.'}
+              </p>
+            )}
+          </div>
+          <button className={styles.logoutBtn} onClick={() => logout(true)}>
+            Log Out
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   /* ── Splash ── */
   if (isLoading || screen === 'splash') {
     return (
@@ -129,6 +237,10 @@ function AppContent() {
     return (
       <div className="app-desktop-shell">
         <div className="app-desktop-card">
+          <div className={styles.profileCircle} onClick={() => setShowProfileMenu(true)}>
+            {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+          </div>
+          {renderProfileModal()}
           <div className={styles.container}>
             <div className={styles.homeScreen}>
               <Logo size={80} glow={isReady} className={styles.homeLogo} />
@@ -176,9 +288,20 @@ function AppContent() {
 
             <div className={styles.readingContainer} style={{ padding: '2rem 1.5rem 6rem' }}>
               <div className={styles.articleHeader}>
-                <span className="pill pill-selected" style={{ width: 'fit-content' }}>
-                  {cat?.emoji || '✨'} {cat?.name || 'Topic'}
-                </span>
+                <div className={styles.articleHeaderTop}>
+                  <span className="pill pill-selected" style={{ width: 'fit-content' }}>
+                    {cat?.emoji || '✨'} {cat?.name || 'Topic'}
+                  </span>
+                  <button 
+                    className={`${styles.bookmarkBtn} ${topic?.isMarked ? styles.bookmarkBtnActive : ''}`}
+                    onClick={() => toggleMark(topic?.assignmentId, topic?.isMarked)}
+                    title={topic?.isMarked ? "Remove bookmark" : "Bookmark this article"}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill={topic?.isMarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </button>
+                </div>
                 <h1 className="t-display">{topic.title}</h1>
                 <p className="t-caption">
                   {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} • {topic.readTime || '3 min'} read
@@ -306,6 +429,10 @@ function AppContent() {
     return (
       <div className="app-desktop-shell">
         <div className="app-desktop-card">
+          <div className={styles.profileCircle} onClick={() => setShowProfileMenu(true)}>
+            {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+          </div>
+          {renderProfileModal()}
           <div className={styles.container}>
             <div className={styles.doneScreen}>
               <svg className={styles.checkmark} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

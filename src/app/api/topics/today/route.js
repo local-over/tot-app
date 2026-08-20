@@ -33,6 +33,8 @@ export async function GET(request) {
         const parsedTopic = {
           ...topicDoc,
           id: topicDoc.$id,
+          assignmentId: existingAssignment.documents[0].$id,
+          isMarked: existingAssignment.documents[0].isMarked || false,
           body: JSON.parse(topicDoc.body || '[]'),
           resources: topicDoc.resources ? JSON.parse(topicDoc.resources) : []
         };
@@ -69,13 +71,15 @@ export async function GET(request) {
     if (recommendedTopic) {
       const topicId = recommendedTopic.id || recommendedTopic.$id;
       // Save assignment
-      await databases.createDocument(DB_ID, 'daily_assignments', ID.unique(), {
+      const newAssignment = await databases.createDocument(DB_ID, 'daily_assignments', ID.unique(), {
         userId,
         topicId: topicId,
         date: todayDate
       });
       // Ensure the recommended topic has .id
       recommendedTopic.id = topicId;
+      recommendedTopic.assignmentId = newAssignment.$id;
+      recommendedTopic.isMarked = false;
       return NextResponse.json(recommendedTopic, { status: 200 });
     } else {
       return NextResponse.json({ error: 'No topics available' }, { status: 404 });
