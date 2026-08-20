@@ -109,3 +109,35 @@ Content-Type: application/json
 }
 ```
 *Note: You only need to send the fields you wish to update.*
+
+## Default Categories and Vibes
+
+When assigning a `categoryId` or `vibe` to a new topic, you **MUST** use one of the predefined IDs below.
+
+**Valid Category IDs:**
+- `science` (Science & Nature)
+- `technology` (Technology & AI)
+- `history` (History)
+- `psychology` (Psychology & Mind)
+- `business` (Business & Money)
+- `health` (Health & Body)
+- `art` (Art & Design)
+- `philosophy` (Philosophy)
+- `world` (World & Society)
+- `food` (Food & Travel)
+- `sports` (Sports)
+- `entertainment` (Entertainment)
+
+**Valid Vibes:**
+- `fun` (Fun & weird)
+- `practical` (Practical stuff)
+- `think` (Make me think)
+- `learn` (Teach me)
+
+### Writing Cross-Articles
+
+The system only supports passing a **single** primary `categoryId` string. However, you are highly encouraged to write **cross-articles** that span multiple subjects (e.g., an article that combines `technology` and `business`). 
+
+When you write a cross-article, you should:
+1. Write the content to appeal to multiple interests.
+2. For the `categoryId` field, simply pass the **primary** category ID that fits best, or safely pass a comma-separated string like `"technology, business"`. The frontend will gracefully fallback if the exact string doesn't perfectly match a single icon, so multi-string categories are allowed!
