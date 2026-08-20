@@ -4,18 +4,20 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import DeviceGuard from '@/components/DeviceGuard';
 import styles from './auth.module.css';
 import { createClient } from '@/lib/appwrite';
 import { ID } from 'appwrite';
 import { useUser } from '@/context/UserContext';
 
 function AuthContent() {
-  const { user, profile, isLoading, checkSession, hasCompletedGate } = useUser();
+  const { user, profile, isLoading, checkSession, hasCompletedGate, logout } = useUser();
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode') || 'signup';
+  const modeParam = searchParams.get('mode');
+  const [mode, setMode] = useState(modeParam || 'signup');
 
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState('email');
+  const [step, setStep] = useState(modeParam ? 'email' : 'landing');
   const [code, setCode] = useState('');
   const [userId, setUserId] = useState('');
   const [error, setError] = useState('');
@@ -24,9 +26,33 @@ function AuthContent() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      routeUser();
+      const isFullySetup = profile?.readingTime && profile?.gateCompleted;
+      
+      if (isFullySetup || step !== 'landing') {
+        routeUser();
+      }
     }
-  }, [isLoading, user, profile]);
+  }, [isLoading, user, profile, step]);
+
+  const handleStart = async (selectedMode) => {
+    if (user) {
+      await logout(true);
+    }
+    setMode(selectedMode);
+    setStep('email');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="app-desktop-shell">
+        <div className="app-desktop-card">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '100dvh' }}>
+            <Logo size={80} glow />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const routeUser = () => {
     if (!profile || !profile.readingTime) {
@@ -92,15 +118,40 @@ function AuthContent() {
         <div className={styles.page}>
           <div className={styles.inner}>
 
-            <div className={styles.header}>
-              <Logo size={56} />
-              <h1 className="t-heading-1" style={{ marginTop: '8px' }}>
-                {isSignup ? 'Create your account' : 'Welcome back'}
-              </h1>
-              <p className="t-caption">
-                {isSignup ? 'Start your daily reading habit' : 'Sign in to continue'}
-              </p>
-            </div>
+            {step === 'landing' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '2rem 0' }}>
+                <Logo size={80} />
+                <h1 className="t-heading-1" style={{ marginTop: '24px', marginBottom: '8px' }}>
+                  Welcome to TOT
+                </h1>
+                <p className="t-body" style={{ opacity: 0.7, marginBottom: '40px' }}>
+                  The one topic a day reading habit.
+                </p>
+                <button
+                  className="btn btn-primary btn-large btn-full"
+                  style={{ marginBottom: '16px' }}
+                  onClick={() => handleStart('signup')}
+                >
+                  Get Started
+                </button>
+                <button
+                  className="btn btn-secondary btn-large btn-full"
+                  onClick={() => handleStart('login')}
+                >
+                  Log In
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className={styles.header}>
+                  <Logo size={56} />
+                  <h1 className="t-heading-1" style={{ marginTop: '8px' }}>
+                    {isSignup ? 'Create your account' : 'Welcome back'}
+                  </h1>
+                  <p className="t-caption">
+                    {isSignup ? 'Start your daily reading habit' : 'Sign in to continue'}
+                  </p>
+                </div>
 
             {error && <div className={styles.error}>{error}</div>}
 
@@ -169,12 +220,19 @@ function AuthContent() {
               </form>
             )}
 
-            <Link
-              href={isSignup ? '/auth?mode=login' : '/auth?mode=signup'}
+            <button
+              onClick={() => {
+                setMode(isSignup ? 'login' : 'signup');
+                setStep('email');
+                setError('');
+              }}
               className={styles.backLink}
+              style={{ display: 'block', margin: '24px auto 0', background: 'none', border: 'none', padding: '8px' }}
             >
               {isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </Link>
+            </button>
+          </>
+        )}
 
           </div>
         </div>
@@ -185,16 +243,18 @@ function AuthContent() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={
-      <div className="app-desktop-shell">
-        <div className="app-desktop-card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '100dvh' }}>
-            <Logo size={56} />
+    <DeviceGuard>
+      <Suspense fallback={
+        <div className="app-desktop-shell">
+          <div className="app-desktop-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '100dvh' }}>
+              <Logo size={56} />
+            </div>
           </div>
         </div>
-      </div>
-    }>
-      <AuthContent />
-    </Suspense>
+      }>
+        <AuthContent />
+      </Suspense>
+    </DeviceGuard>
   );
 }

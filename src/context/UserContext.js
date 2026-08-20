@@ -45,14 +45,16 @@ export function UserProvider({ children }) {
   const isNewUser = !!user && !profile?.readingTime;
   const hasCompletedGate = !!profile?.gateCompleted;
 
-  const logout = async () => {
+  const logout = async (noRedirect = false) => {
     try {
       const { account } = createClient();
       await account.deleteSession('current');
     } catch {}
     setUser(null);
     setProfile(null);
-    router.push('/');
+    if (!noRedirect) {
+      router.push('/');
+    }
   };
 
   const updateProfile = async (updates) => {

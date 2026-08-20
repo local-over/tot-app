@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import Logo from '@/components/Logo';
+import DeviceGuard from '@/components/DeviceGuard';
 import styles from './gate.module.css';
 
 function GateContent() {
@@ -200,8 +201,10 @@ function GateContent() {
 
 export default function GatePage() {
   return (
-    <Suspense fallback={null}>
-      <GateContent />
-    </Suspense>
+    <DeviceGuard>
+      <Suspense fallback={null}>
+        <GateContent />
+      </Suspense>
+    </DeviceGuard>
   );
 }

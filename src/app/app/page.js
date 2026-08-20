@@ -6,10 +6,9 @@ import { useUser } from '@/context/UserContext';
 import styles from './app.module.css';
 import Logo from '@/components/Logo';
 import { categories as allCategories, readingTimes } from '@/data/categories';
-import { getRecommendation } from '@/lib/recommend';
-import { topics } from '@/data/topics';
+import DeviceGuard from '@/components/DeviceGuard';
 
-export default function App() {
+function AppContent() {
   const { user, profile, isLoading, hasCompletedGate, updateProfile } = useUser();
   const router = useRouter();
 
@@ -27,13 +26,28 @@ export default function App() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) { router.replace('/'); return; }
-    if (!profile?.readingTime) { router.replace('/setup'); return; }
+    if (!profile?.readingTime) { router.replace('/auth'); return; }
     if (!hasCompletedGate) { router.replace('/gate'); return; }
 
     if (screen === 'splash') {
-      const recommended = getRecommendation(profile, []);
-      setTopic(recommended || topics[0]);
-      setTimeout(() => setScreen('home'), 1200);
+      const fetchTopic = async () => {
+        try {
+          const params = new URLSearchParams({
+            userId: user.id || user.email,
+            readingStyle: profile.readingStyle || 'mix',
+            categories: (profile.categories || []).join(',')
+          });
+          const res = await fetch(`/api/topics/today?${params.toString()}`);
+          if (res.ok) {
+            const data = await res.json();
+            setTopic(data);
+          }
+        } catch (err) {
+          console.error("Failed to fetch today's topic:", err);
+        }
+        setTimeout(() => setScreen('home'), 1200);
+      };
+      fetchTopic();
     }
   }, [user, profile, isLoading, hasCompletedGate, screen, router]);
 
@@ -318,4 +332,12 @@ export default function App() {
   }
 
   return null;
+}
+
+export default function App() {
+  return (
+    <DeviceGuard>
+      <AppContent />
+    </DeviceGuard>
+  );
 }

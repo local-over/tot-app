@@ -1,5 +1,3 @@
-import { topics } from '@/data/topics';
-
 /**
  * Pick today's topic for a user based on their profile and history.
  *
@@ -10,7 +8,7 @@ import { topics } from '@/data/topics';
  * 4. Prefer topics the user hasn't read yet
  * 5. Use date as seed for deterministic daily selection
  */
-export function getRecommendation(userProfile, feedbackHistory = []) {
+export function getRecommendation(topics, userProfile, feedbackHistory = []) {
   const { categories: userCategories, readingStyle, contentVibe } = userProfile;
 
   // 1. Filter to user's categories
@@ -35,7 +33,7 @@ export function getRecommendation(userProfile, feedbackHistory = []) {
 
   // 4. Remove already-read topics
   const readIds = new Set(feedbackHistory.map(f => f.topicId));
-  const unread = pool.filter(t => !readIds.has(t.id));
+  const unread = pool.filter(t => !readIds.has(t.$id));
   if (unread.length > 0) {
     pool = unread;
   }
@@ -43,7 +41,7 @@ export function getRecommendation(userProfile, feedbackHistory = []) {
   // 5. Build category weights from feedback
   const categoryScores = {};
   for (const fb of feedbackHistory) {
-    const topic = topics.find(t => t.id === fb.topicId);
+    const topic = topics.find(t => t.$id === fb.topicId);
     if (!topic) continue;
     const cat = topic.categoryId;
     if (!categoryScores[cat]) categoryScores[cat] = { total: 0, count: 0 };

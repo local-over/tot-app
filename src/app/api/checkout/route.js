@@ -14,7 +14,7 @@ export async function POST(request) {
 
     const session = await dodo.checkoutSessions.create({
       product_cart: [
-        { product_id: 'pdt_tot_monthly', quantity: 1 } 
+        { product_id: 'pdt_0NlnL2RDR0Xgj6a7t2zSd', quantity: 1 } 
       ],
       customer: {
         email: email || 'customer@example.com',

@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/appwrite';
+import { createAdminClient } from '@/lib/appwrite-server';
 import { ID, Query } from 'appwrite';
 
 export async function POST(request) {
