@@ -53,6 +53,24 @@ function AuthContent() {
     setStep('email');
   };
 
+  const urlUserId = searchParams.get('userId');
+  const urlSecret = searchParams.get('secret');
+  const [oauthLoading, setOauthLoading] = useState(false);
+
+  useEffect(() => {
+    if (urlUserId && urlSecret && !user && !oauthLoading) {
+      setOauthLoading(true);
+      const { account } = createClient();
+      account.createSession(urlUserId, urlSecret)
+        .then(() => checkSession())
+        .catch(e => setError(e.message || 'Google login failed.'))
+        .finally(() => {
+          setOauthLoading(false);
+          router.replace(`/auth?mode=${mode}`);
+        });
+    }
+  }, [urlUserId, urlSecret, user, oauthLoading, checkSession, router, mode]);
+
   if (isLoading) {
     return (
       <div className="app-desktop-shell">
@@ -99,24 +117,6 @@ function AuthContent() {
       setLoading(false);
     }
   };
-
-  const urlUserId = searchParams.get('userId');
-  const urlSecret = searchParams.get('secret');
-  const [oauthLoading, setOauthLoading] = useState(false);
-
-  useEffect(() => {
-    if (urlUserId && urlSecret && !user && !oauthLoading) {
-      setOauthLoading(true);
-      const { account } = createClient();
-      account.createSession(urlUserId, urlSecret)
-        .then(() => checkSession())
-        .catch(e => setError(e.message || 'Google login failed.'))
-        .finally(() => {
-          setOauthLoading(false);
-          router.replace(`/auth?mode=${mode}`);
-        });
-    }
-  }, [urlUserId, urlSecret, user, oauthLoading, checkSession, router, mode]);
 
   const handleGoogle = () => {
     try {
