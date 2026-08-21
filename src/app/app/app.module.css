@@ -404,6 +404,24 @@
   to { transform: translateY(0); }
 }
 
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.profileModalClosing {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.profileModalOverlayClosing {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
 .dragHandle {
   width: 40px;
   height: 5px;

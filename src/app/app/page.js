@@ -24,6 +24,7 @@ function AppContent() {
   });
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isClosingMenu, setIsClosingMenu] = useState(false);
   const [menuView, setMenuView] = useState('main'); // 'main', 'saved', 'history', 'settings'
   const [userHistory, setUserHistory] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
@@ -186,8 +187,17 @@ function AppContent() {
     setRatingData({ rating: null, moreOrLess: null, length: null });
   };
 
+  const closeProfileMenu = () => {
+    setIsClosingMenu(true);
+    setTimeout(() => {
+      setShowProfileMenu(false);
+      setIsClosingMenu(false);
+      setMenuView('main'); // Reset to main list for next time
+    }, 300);
+  };
+
   const renderProfileModal = () => {
-    if (!showProfileMenu) return null;
+    if (!showProfileMenu && !isClosingMenu) return null;
     const displayedHistory = menuView === 'saved' 
       ? userHistory.filter(h => h.isMarked) 
       : userHistory;
@@ -224,16 +234,16 @@ function AppContent() {
 
     const handleTouchEnd = () => {
       if (modalTranslateY > 120) {
-        setShowProfileMenu(false);
+        closeProfileMenu();
       }
       setTouchStartY(null);
       setModalTranslateY(0);
     };
 
     return (
-      <div className={styles.profileModalOverlay} onClick={() => setShowProfileMenu(false)}>
+      <div className={`${styles.profileModalOverlay} ${isClosingMenu ? styles.profileModalOverlayClosing : ''}`} onClick={closeProfileMenu}>
         <div 
-          className={styles.profileModal} 
+          className={`${styles.profileModal} ${isClosingMenu ? styles.profileModalClosing : ''}`} 
           onClick={e => e.stopPropagation()}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
