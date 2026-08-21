@@ -147,7 +147,11 @@ function AppContent() {
 
     if (screen === 'splash') {
       const fetchTopic = async () => {
-        const cachedTopicStr = localStorage.getItem('tot_latest_topic');
+        let cachedTopicStr = null;
+        try {
+          cachedTopicStr = localStorage.getItem('tot_latest_topic');
+        } catch {}
+        
         let cachedTopic = null;
 
         if (cachedTopicStr) {

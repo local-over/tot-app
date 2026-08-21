@@ -22,7 +22,7 @@ export function UserProvider({ children }) {
   });
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== 'undefined') {
-      return !localStorage.getItem('tot_user');
+      try { return !localStorage.getItem('tot_user'); } catch { return true; }
     }
     return true;
   });
