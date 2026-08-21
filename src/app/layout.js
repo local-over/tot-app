@@ -35,6 +35,9 @@ export const metadata = {
 };
 
 import { UserProvider } from "@/context/UserContext";
+import PWARegistry from "@/components/PWARegistry";
+import SmartUpdater from "@/components/SmartUpdater";
+import NotificationManager from "@/components/NotificationManager";
 
 export default function RootLayout({ children }) {
   return (
@@ -42,6 +45,9 @@ export default function RootLayout({ children }) {
       <body>
         <UserProvider>
           {children}
+          <PWARegistry />
+          <SmartUpdater />
+          <NotificationManager />
         </UserProvider>
       </body>
     </html>

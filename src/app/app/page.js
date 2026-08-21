@@ -64,6 +64,14 @@ function AppContent() {
     }
   }, [showProfileMenu, menuView, profile]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
+
   const handleSaveAccount = async () => {
     setIsSavingAccount(true);
     try {
@@ -129,8 +137,11 @@ function AppContent() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) { router.replace('/'); return; }
-    if (!profile?.readingTime) { router.replace('/auth'); return; }
     if (!hasCompletedGate) { router.replace('/gate'); return; }
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
     if (screen === 'splash') {
       const fetchTopic = async () => {
@@ -169,7 +180,30 @@ function AppContent() {
       }
 
       const diff = target - now;
-      if (diff <= 0) { setIsReady(true); return; }
+      if (diff <= 0) { 
+        setIsReady(true);
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          const lastNotified = localStorage.getItem('tot_last_notified');
+          const todayStr = new Date().toDateString();
+          if (lastNotified !== todayStr) {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification('Time to read!', {
+                  body: 'Your daily TOT is ready.',
+                  icon: '/logo_black.png'
+                });
+              });
+            } else {
+              new Notification('Time to read!', {
+                body: 'Your daily TOT is ready.',
+                icon: '/logo.png'
+              });
+            }
+            localStorage.setItem('tot_last_notified', todayStr);
+          }
+        }
+        return;
+      }
 
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
@@ -318,6 +352,15 @@ function AppContent() {
                   </span>
                   Edit Profile & Interests
                 </button>
+                <button className={styles.menuItem} onClick={() => setMenuView('payment')}>
+                  <span className={styles.menuItemIcon}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                      <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                  </span>
+                  Subscription & Billing
+                </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '0.5rem 1rem' }} />
                 <button className={styles.menuItem} onClick={() => logout(true)} style={{ color: '#ff6b6b' }}>
                   <span className={styles.menuItemIcon}>
@@ -367,36 +410,6 @@ function AppContent() {
                     </div>
                   </div>
 
-                  <div className={styles.formGroup} style={{ marginTop: '2rem' }}>
-                    <label>Payment Settings</label>
-                    <div style={{ padding: '1rem', background: 'var(--surface-3)', borderRadius: '12px', marginTop: '0.5rem' }}>
-                      <p style={{ margin: '0 0 0.5rem', color: 'var(--white)' }}>
-                        <strong>Current Plan:</strong> {profile?.plan === 'student' ? 'Student (Free Year)' : profile?.plan === 'free_month' ? 'Free Month' : 'Paid Subscription'}
-                      </p>
-                      <p style={{ margin: '0', color: 'var(--white-60)' }}>
-                        <strong>Access valid until:</strong> {profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString() : 'Unknown'}
-                      </p>
-                      
-                      {profile?.dodo_subscription_id && (
-                        <button 
-                          onClick={handleCancelSubscription}
-                          disabled={isCancelling}
-                          style={{ 
-                            marginTop: '1rem', 
-                            background: 'transparent', 
-                            border: '1px solid var(--error)', 
-                            color: 'var(--error)', 
-                            padding: '0.5rem 1rem',
-                            borderRadius: '8px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
                   <button 
                     className={`btn btn-primary btn-full ${styles.saveBtn}`}
                     onClick={handleSaveAccount}
@@ -405,6 +418,42 @@ function AppContent() {
                   >
                     {isSavingAccount ? 'Saving...' : 'Save Changes'}
                   </button>
+                </div>
+              </div>
+            ) : menuView === 'payment' ? (
+              <div className={styles.accountFormSection}>
+                <div className={styles.sheetTitleBar}>
+                  <button className={styles.backBtn} onClick={() => setMenuView('main')}>←</button>
+                  <h3 className="t-heading-3" style={{ margin: 0 }}>Subscription & Billing</h3>
+                </div>
+
+                <div className="scrollable-area" style={{ overflowY: 'auto', flex: 1, paddingBottom: '2rem', padding: '1rem' }}>
+                  <div style={{ background: 'var(--surface-3)', borderRadius: '12px', padding: '1.5rem' }}>
+                    <h4 className="t-heading-4" style={{ margin: '0 0 1rem' }}>Your Plan</h4>
+                    <p style={{ margin: '0 0 0.5rem', color: 'var(--white)', fontSize: '1.1rem' }}>
+                      {profile?.plan === 'student' ? 'Student (Free Year)' : profile?.plan === 'free_month' ? 'Free Month' : 'Paid Subscription'}
+                    </p>
+                    <p style={{ margin: '0', color: 'var(--white-60)' }}>
+                      Access valid until: {profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString() : 'Unknown'}
+                    </p>
+                    
+                    {profile?.dodo_subscription_id && (
+                      <button 
+                        className="btn btn-secondary"
+                        onClick={handleCancelSubscription}
+                        disabled={isCancelling}
+                        style={{ 
+                          marginTop: '2rem', 
+                          border: '1px solid var(--error)', 
+                          color: 'var(--error)', 
+                          width: '100%',
+                          backgroundColor: 'transparent'
+                        }}
+                      >
+                        {isCancelling ? 'Processing...' : 'Cancel Subscription'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
