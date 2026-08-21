@@ -100,16 +100,28 @@ function AuthContent() {
     }
   };
 
-  const handleGoogle = () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (isIOS) {
-      alert("Google Login is currently blocked by Apple's strict privacy settings on iPhones. Please use the email verification code above instead!");
-      return;
-    }
+  const urlUserId = searchParams.get('userId');
+  const urlSecret = searchParams.get('secret');
+  const [oauthLoading, setOauthLoading] = useState(false);
 
+  useEffect(() => {
+    if (urlUserId && urlSecret && !user && !oauthLoading) {
+      setOauthLoading(true);
+      const { account } = createClient();
+      account.createSession(urlUserId, urlSecret)
+        .then(() => checkSession())
+        .catch(e => setError(e.message || 'Google login failed.'))
+        .finally(() => {
+          setOauthLoading(false);
+          router.replace(`/auth?mode=${mode}`);
+        });
+    }
+  }, [urlUserId, urlSecret, user, oauthLoading, checkSession, router, mode]);
+
+  const handleGoogle = () => {
     try {
       const { account } = createClient();
-      account.createOAuth2Session(
+      account.createOAuth2Token(
         'google',
         `${window.location.origin}/auth?mode=${mode}`,
         `${window.location.origin}/auth?mode=${mode}&error=oauth_failed`
