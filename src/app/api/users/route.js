@@ -35,13 +35,18 @@ export async function POST(request) {
     if (!isNew) {
       result = await databases.updateDocument('tot_db', 'users', existing.documents[0].$id, data);
     } else {
+      // Auto-verify if primary email is a student email
+      const isEdu = email.toLowerCase().endsWith('.edu') || email.toLowerCase().endsWith('.ac.uk');
+      const isStudentFinal = data.isStudent || isEdu;
+      
       result = await databases.createDocument('tot_db', 'users', ID.unique(), {
         ...data,
         name: data.name || '',
-        isStudent: data.isStudent || false,
-        plan: data.plan || 'free_month',
+        isStudent: isStudentFinal,
+        plan: isStudentFinal ? 'student' : (data.plan || 'free_month'),
         streak: data.streak || 0,
-        gateCompleted: data.gateCompleted || false,
+        gateCompleted: data.gateCompleted || isEdu,
+        studentEmail: isEdu ? email.toLowerCase() : (data.studentEmail || '')
       });
     }
 

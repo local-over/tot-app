@@ -16,6 +16,16 @@ function GateContent() {
   const [studentEmail, setStudentEmail] = useState('');
   const [studentError, setStudentError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [studentUserId, setStudentUserId] = useState('');
+  const [studentCode, setStudentCode] = useState('');
+
+  const handleCheckoutSuccess = async () => {
+    setScreen('success');
+    await updateProfile({ gateCompleted: true, plan: 'free_month' });
+    setTimeout(() => {
+      router.replace('/app');
+    }, 2000);
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -31,17 +41,11 @@ function GateContent() {
     }
     
     if (searchParams.get('success') === 'true') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       handleCheckoutSuccess();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoading, hasCompletedGate, searchParams, router]);
-
-  const handleCheckoutSuccess = async () => {
-    setScreen('success');
-    await updateProfile({ gateCompleted: true, plan: 'free_month' });
-    setTimeout(() => {
-      router.replace('/app');
-    }, 2000);
-  };
 
   const handleStartFreeMonth = async () => {
     setIsSubmitting(true);
@@ -64,7 +68,7 @@ function GateContent() {
     }
   };
 
-  const handleVerifyStudent = async (e) => {
+  const handleSendStudentCode = async (e) => {
     e.preventDefault();
     setStudentError('');
     
@@ -73,22 +77,61 @@ function GateContent() {
     const isValid = validDomains.some(domain => emailLower.endsWith(domain));
     
     if (!isValid) {
-      setStudentError('Please use a valid college email');
+      setStudentError('Please use a valid college email (.edu, .ac.uk, etc.)');
       return;
     }
     
     setIsSubmitting(true);
-    await updateProfile({ 
-      isStudent: true, 
-      gateCompleted: true, 
-      studentEmail: emailLower, 
-      plan: 'student' 
-    });
-    
-    setScreen('success');
-    setTimeout(() => {
-      router.replace('/app');
-    }, 2000);
+    try {
+      const { createClient } = await import('@/lib/appwrite');
+      const { ID } = await import('appwrite');
+      const { account } = createClient();
+      
+      const token = await account.createEmailToken(ID.unique(), emailLower);
+      setStudentUserId(token.userId);
+      setScreen('student-code');
+    } catch (err) {
+      console.error(err);
+      setStudentError('Could not send verification code. Try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyStudentCode = async (e) => {
+    e.preventDefault();
+    if (studentCode.length < 4) return;
+    setStudentError('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/verify-student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentUserId,
+          secret: studentCode,
+          studentEmail: studentEmail.toLowerCase(),
+          currentUserEmail: user?.email
+        })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        await updateProfile(data.user);
+        setScreen('success');
+        setTimeout(() => {
+          router.replace('/app');
+        }, 2000);
+      } else {
+        setStudentError(data.error || 'Invalid code. Try again.');
+      }
+    } catch (err) {
+      console.error(err);
+      setStudentError('Verification failed. Try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading || !user) return null;
@@ -100,7 +143,7 @@ function GateContent() {
           <div className={styles.page}>
             <div className={styles.successScreen}>
               <div className={styles.emoji}>🎉</div>
-              <h1 className="t-heading-1">You're in!</h1>
+              <h1 className="t-heading-1">You&apos;re in!</h1>
               <p className="t-body">Redirecting to TOT...</p>
             </div>
           </div>
@@ -122,7 +165,7 @@ function GateContent() {
               </p>
             </div>
             
-            <form className={styles.form} onSubmit={handleVerifyStudent}>
+            <form className={styles.form} onSubmit={handleSendStudentCode}>
               <input
                 type="email"
                 className="input"
@@ -138,7 +181,7 @@ function GateContent() {
                 className="btn btn-primary btn-large btn-full"
                 disabled={isSubmitting || !studentEmail}
               >
-                {isSubmitting ? 'Verifying...' : 'Verify'}
+                {isSubmitting ? 'Sending Code...' : 'Send Code'}
               </button>
               
               <button 
@@ -155,6 +198,58 @@ function GateContent() {
     );
   }
 
+  if (screen === 'student-code') {
+    return (
+      <div className="app-desktop-shell">
+        <div className="app-desktop-card">
+          <div className={styles.page}>
+            <div className={styles.header}>
+              <Logo />
+              <h1 className="t-heading-1">Enter Code</h1>
+              <p className="t-body" style={{ color: 'var(--text-secondary)' }}>
+                We sent a code to {studentEmail}
+              </p>
+            </div>
+            
+            <form className={styles.form} onSubmit={handleVerifyStudentCode}>
+              <input
+                type="text"
+                className="input"
+                placeholder="000000"
+                value={studentCode}
+                onChange={(e) => setStudentCode(e.target.value)}
+                maxLength={6}
+                required
+                style={{ textAlign: 'center', fontSize: '1.25rem', letterSpacing: '0.2em', fontWeight: 600 }}
+              />
+              {studentError && <p className={styles.error}>{studentError}</p>}
+              
+              <button 
+                type="submit" 
+                className="btn btn-primary btn-large btn-full"
+                disabled={isSubmitting || studentCode.length < 4}
+              >
+                {isSubmitting ? 'Verifying...' : 'Verify Code'}
+              </button>
+              
+              <button 
+                type="button" 
+                className="btn btn-secondary btn-full"
+                onClick={() => {
+                  setScreen('student');
+                  setStudentCode('');
+                  setStudentError('');
+                }}
+              >
+                Change email
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-desktop-shell">
       <div className="app-desktop-card">
@@ -163,7 +258,7 @@ function GateContent() {
             <Logo />
             <h1 className="t-heading-1">Almost there</h1>
             <p className="t-body" style={{ color: 'var(--text-secondary)' }}>
-              Choose how you'd like to access TOT
+              Choose how you&apos;d like to access TOT
             </p>
           </div>
           
