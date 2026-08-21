@@ -14,7 +14,10 @@ export default function NotificationManager() {
     if (Notification.permission === 'default') {
       // Small delay so we don't bombard them instantly
       setTimeout(() => {
-        Notification.requestPermission();
+        try {
+          const promise = Notification.requestPermission();
+          if (promise) promise.catch(() => {});
+        } catch (e) {}
       }, 5000);
     }
 
@@ -34,7 +37,11 @@ export default function NotificationManager() {
       if (profile.readingTime === 'night') targetHour = 20;
 
       // Check if it is EXACTLY the target hour, and we haven't notified today
-      const lastNotified = localStorage.getItem('tot_last_notified');
+      let lastNotified = null;
+      try {
+        lastNotified = localStorage.getItem('tot_last_notified');
+      } catch (e) {}
+      
       const todayStr = now.toLocaleDateString();
 
       if (currentHour === targetHour && lastNotified !== todayStr) {
@@ -45,15 +52,19 @@ export default function NotificationManager() {
               icon: '/logo.png',
               badge: '/logo_black.png',
               vibrate: [200, 100, 200]
-            });
+            }).catch(() => {});
           });
         } else {
-          new Notification('Time to read! 📖', {
-            body: 'Your daily TOT is ready. Tap to read it now.',
-            icon: '/logo.png',
-          });
+          try {
+            new Notification('Time to read! 📖', {
+              body: 'Your daily TOT is ready. Tap to read it now.',
+              icon: '/logo.png',
+            });
+          } catch (e) {}
         }
-        localStorage.setItem('tot_last_notified', todayStr);
+        try {
+          localStorage.setItem('tot_last_notified', todayStr);
+        } catch (e) {}
       }
     };
 

@@ -67,7 +67,10 @@ function AppContent() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
-        Notification.requestPermission();
+        try {
+          const promise = Notification.requestPermission();
+          if (promise) promise.catch(() => {});
+        } catch (e) {}
       }
     }
   }, []);
@@ -142,7 +145,10 @@ function AppContent() {
     if (!hasCompletedGate) { router.replace('/gate'); return; }
 
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+      try {
+        const promise = Notification.requestPermission();
+        if (promise) promise.catch(() => {});
+      } catch (e) {}
     }
 
     if (screen === 'splash') {
