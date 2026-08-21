@@ -134,6 +134,8 @@ function AppContent() {
     setIsMarking(false);
   };
 
+  const [offlineMode, setOfflineMode] = useState(false);
+
   useEffect(() => {
     if (isLoading) return;
     if (!user) { router.replace('/auth'); return; }
@@ -145,13 +147,15 @@ function AppContent() {
 
     if (screen === 'splash') {
       const fetchTopic = async () => {
-        const todayStr = new Date().toDateString();
-        const cachedTopicKey = 'tot_topic_' + todayStr;
-        const cachedTopic = localStorage.getItem(cachedTopicKey);
+        const cachedTopicStr = localStorage.getItem('tot_latest_topic');
+        let cachedTopic = null;
 
-        if (cachedTopic) {
-          try { setTopic(JSON.parse(cachedTopic)); } catch {}
-          setScreen('home');
+        if (cachedTopicStr) {
+          try { 
+            cachedTopic = JSON.parse(cachedTopicStr);
+            setTopic(cachedTopic); 
+            setScreen('home');
+          } catch {}
         }
 
         try {
@@ -164,10 +168,14 @@ function AppContent() {
           if (res.ok) {
             const data = await res.json();
             setTopic(data);
-            localStorage.setItem(cachedTopicKey, JSON.stringify(data));
+            localStorage.setItem('tot_latest_topic', JSON.stringify(data));
+            setOfflineMode(false);
+          } else {
+            throw new Error('Network response was not ok');
           }
         } catch (err) {
-          console.error("Failed to fetch today's topic:", err);
+          console.warn("Failed to fetch today's topic, using cache:", err);
+          setOfflineMode(true);
         } finally {
           if (!cachedTopic) {
             setScreen('home');
@@ -536,6 +544,7 @@ function AppContent() {
           {renderProfileModal()}
           <div className={styles.container}>
             <div className={styles.homeScreen}>
+              {renderOfflineBanner()}
               <Logo size={80} glow={isReady} className={styles.homeLogo} />
 
               <div className={styles.streakBadge}>
@@ -568,7 +577,17 @@ function AppContent() {
 
   /* ── Reading ── */
   if (screen === 'reading') {
-    if (!topic) return null;
+    if (!topic) {
+      return (
+        <div className="app-desktop-shell">
+          <div className="app-desktop-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center' }}>
+            <h2 className="t-heading-2">Topic not loaded</h2>
+            <p className="t-body" style={{ color: 'var(--white-60)', margin: '1rem 0 2rem' }}>Please connect to the internet to download your first topic.</p>
+            <button className="btn btn-primary" onClick={() => setScreen('home')}>Go Back</button>
+          </div>
+        </div>
+      );
+    }
     const cat = allCategories.find(c => c.id === topic.categoryId);
 
     return (
@@ -580,6 +599,7 @@ function AppContent() {
             </div>
 
             <div className={styles.readingContainer} style={{ padding: '2rem 1.5rem 6rem' }}>
+              {renderOfflineBanner()}
               <div className={styles.articleHeader}>
                 <div className={styles.articleHeaderTop}>
                   <span className="pill pill-selected" style={{ width: 'fit-content' }}>
