@@ -145,6 +145,15 @@ function AppContent() {
 
     if (screen === 'splash') {
       const fetchTopic = async () => {
+        const todayStr = new Date().toDateString();
+        const cachedTopicKey = 'tot_topic_' + todayStr;
+        const cachedTopic = localStorage.getItem(cachedTopicKey);
+
+        if (cachedTopic) {
+          try { setTopic(JSON.parse(cachedTopic)); } catch {}
+          setScreen('home');
+        }
+
         try {
           const params = new URLSearchParams({
             userId: user.id || user.email,
@@ -155,11 +164,15 @@ function AppContent() {
           if (res.ok) {
             const data = await res.json();
             setTopic(data);
+            localStorage.setItem(cachedTopicKey, JSON.stringify(data));
           }
         } catch (err) {
           console.error("Failed to fetch today's topic:", err);
+        } finally {
+          if (!cachedTopic) {
+            setScreen('home');
+          }
         }
-        setTimeout(() => setScreen('home'), 1200);
       };
       fetchTopic();
     }

@@ -8,9 +8,24 @@ import Logo from '@/components/Logo';
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try { return JSON.parse(localStorage.getItem('tot_user')); } catch {}
+    }
+    return null;
+  });
+  const [profile, setProfile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try { return JSON.parse(localStorage.getItem('tot_profile')); } catch {}
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('tot_user');
+    }
+    return true;
+  });
   const router = useRouter();
   const pathname = usePathname();
 
@@ -20,25 +35,33 @@ export function UserProvider({ children }) {
 
   const checkSession = async () => {
     try {
-      setIsLoading(true);
+      // Don't set isLoading to true if we already have a cached user, to prevent UI blocking
+      if (!user) setIsLoading(true);
       const { account } = createClient();
       const session = await account.get();
-      setUser({ email: session.email, id: session.$id, name: session.name });
+      const userData = { email: session.email, id: session.$id, name: session.name };
+      setUser(userData);
+      localStorage.setItem('tot_user', JSON.stringify(userData));
 
       const res = await fetch(`/api/users?email=${encodeURIComponent(session.email)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.user) {
           setProfile(data.user);
+          localStorage.setItem('tot_profile', JSON.stringify(data.user));
         } else {
           setProfile(null);
+          localStorage.removeItem('tot_profile');
         }
       } else {
         setProfile(null);
+        localStorage.removeItem('tot_profile');
       }
     } catch {
       setUser(null);
       setProfile(null);
+      localStorage.removeItem('tot_user');
+      localStorage.removeItem('tot_profile');
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +78,8 @@ export function UserProvider({ children }) {
     } catch {}
     setUser(null);
     setProfile(null);
+    localStorage.removeItem('tot_user');
+    localStorage.removeItem('tot_profile');
     if (!noRedirect) {
       router.push('/');
     }
@@ -73,6 +98,7 @@ export function UserProvider({ children }) {
       const data = await res.json();
       if (data.success && data.user) {
         setProfile(data.user);
+        localStorage.setItem('tot_profile', JSON.stringify(data.user));
         return true;
       }
     } catch (error) {
@@ -92,15 +118,12 @@ export function UserProvider({ children }) {
       const data = await res.json();
       if (data.success && data.user) {
         setProfile(data.user);
+        localStorage.setItem('tot_profile', JSON.stringify(data.user));
       }
     } catch {}
   };
 
-  useEffect(() => {
-    if (!isLoading && user && pathname === '/') {
-      router.replace('/app');
-    }
-  }, [isLoading, user, pathname, router]);
+
 
 
 
