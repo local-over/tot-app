@@ -20,7 +20,7 @@ export async function POST(request) {
     }
 
     // 2. Verify the code with Appwrite by hitting the REST API directly
-    const verifyRes = await fetch('https://nyc.cloud.appwrite.io/v1/account/sessions/email', {
+    const verifyRes = await fetch('https://nyc.cloud.appwrite.io/v1/account/sessions/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

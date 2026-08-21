@@ -378,21 +378,28 @@
   backdrop-filter: blur(5px);
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* changed from center to flex-end */
   justify-content: center;
   animation: fadeIn 0.2s ease-out forwards;
 }
 
 .profileModal {
-  background-color: #000;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  border-radius: 20px;
-  border: 1px solid var(--border-subtle);
+  background-color: var(--background);
+  width: 100%;
+  max-width: 430px;
+  max-height: 85vh;
+  border-radius: 24px 24px 0 0; /* rounded top only */
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 .profileModalHeader {
@@ -498,8 +505,62 @@
 
 .bookmarkBtn:hover {
   background-color: var(--surface-1);
+  color: var(--amber);
 }
 
 .bookmarkBtnActive {
   color: var(--amber);
+}
+
+/* Account Tab Styles */
+.accountAvatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--surface-2);
+  color: var(--white);
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  border: 2px solid var(--border-medium);
+}
+
+.accountPlanBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background-color: rgba(212, 175, 55, 0.15);
+  color: var(--amber);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.accountFormSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.formGroup label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--white-90);
+}
+
+.saveBtn {
+  margin-top: 1rem;
 }

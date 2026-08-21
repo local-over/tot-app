@@ -24,10 +24,13 @@ function AppContent() {
   });
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [historyTab, setHistoryTab] = useState('marked');
+  const [historyTab, setHistoryTab] = useState('marked'); // 'marked', 'history', 'account'
   const [userHistory, setUserHistory] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
+  
+  const [accountForm, setAccountForm] = useState({ name: '', categories: [] });
+  const [isSavingAccount, setIsSavingAccount] = useState(false);
 
   const fetchHistory = async () => {
     setIsHistoryLoading(true);
@@ -44,8 +47,31 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (showProfileMenu) fetchHistory();
-  }, [showProfileMenu]);
+    if (showProfileMenu) {
+      if (historyTab === 'marked' || historyTab === 'history') fetchHistory();
+      if (historyTab === 'account' && profile) {
+        setAccountForm({
+          name: profile.name || '',
+          categories: profile.categories || []
+        });
+      }
+    }
+  }, [showProfileMenu, historyTab, profile]);
+
+  const handleSaveAccount = async () => {
+    if (accountForm.name.trim().length < 2 || accountForm.categories.length < 3) return;
+    setIsSavingAccount(true);
+    await updateProfile({ name: accountForm.name.trim(), categories: accountForm.categories });
+    setIsSavingAccount(false);
+  };
+
+  const toggleCategory = (catId) => {
+    setAccountForm(prev => {
+      const isSelected = prev.categories.includes(catId);
+      if (isSelected) return { ...prev, categories: prev.categories.filter(id => id !== catId) };
+      return { ...prev, categories: [...prev.categories, catId] };
+    });
+  };
 
   const toggleMark = async (assignmentId, currentMarkedStatus) => {
     if (isMarking || !assignmentId) return;
@@ -182,9 +208,72 @@ function AppContent() {
             >
               History
             </button>
+            <button 
+              className={`${styles.tab} ${historyTab === 'account' ? styles.tabActive : ''}`}
+              onClick={() => setHistoryTab('account')}
+            >
+              Account
+            </button>
           </div>
           <div className={styles.profileModalBody}>
-            {isHistoryLoading ? (
+            {historyTab === 'account' ? (
+              <div className={styles.accountFormSection}>
+                <div className={styles.accountAvatar}>
+                  {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h3 className="t-heading-2">{profile?.name}</h3>
+                  <div className={styles.accountPlanBadge}>
+                    {profile?.plan === 'student' ? '🎓 Free for 1 year (Student)' 
+                     : profile?.plan === 'free_month' ? 'First month free' 
+                     : '$1 / month'}
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Your Name</label>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    value={accountForm.name} 
+                    onChange={e => setAccountForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+
+                <div className={styles.formGroup} style={{ marginTop: '1rem' }}>
+                  <label>Your Interests (Select at least 3)</label>
+                  <div className={styles.categoriesGrid}>
+                    {allCategories.map(cat => {
+                      const isSelected = accountForm.categories.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          className={`pill ${isSelected ? 'pill-selected' : ''}`}
+                          onClick={() => toggleCategory(cat.id)}
+                          style={{ fontSize: '0.875rem', padding: '6px 12px' }}
+                        >
+                          {cat.emoji} {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button 
+                  className={`btn btn-primary btn-full ${styles.saveBtn}`}
+                  onClick={handleSaveAccount}
+                  disabled={isSavingAccount || accountForm.name.trim().length < 2 || accountForm.categories.length < 3}
+                >
+                  {isSavingAccount ? 'Saving...' : 'Save Changes'}
+                </button>
+
+                <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                  <button className={styles.logoutBtn} onClick={() => logout(true)} style={{ width: '100%', margin: 0 }}>
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            ) : isHistoryLoading ? (
               <p style={{ textAlign: 'center', color: 'var(--white-60)' }}>Loading...</p>
             ) : displayedHistory.length > 0 ? (
               displayedHistory.map(item => (
@@ -209,9 +298,6 @@ function AppContent() {
               </p>
             )}
           </div>
-          <button className={styles.logoutBtn} onClick={() => logout(true)}>
-            Log Out
-          </button>
         </div>
       </div>
     );

@@ -24,6 +24,16 @@ function AuthContent() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const routeUser = () => {
+    if (!profile || !profile.readingTime) {
+      router.replace('/setup');
+    } else if (!hasCompletedGate) {
+      router.replace('/gate');
+    } else {
+      router.replace('/app');
+    }
+  };
+
   useEffect(() => {
     if (!isLoading && user) {
       const isFullySetup = profile?.readingTime && profile?.gateCompleted;
@@ -32,6 +42,7 @@ function AuthContent() {
         routeUser();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, user, profile, step]);
 
   const handleStart = async (selectedMode) => {
@@ -54,16 +65,6 @@ function AuthContent() {
     );
   }
 
-  const routeUser = () => {
-    if (!profile || !profile.readingTime) {
-      router.replace('/setup');
-    } else if (!hasCompletedGate) {
-      router.replace('/gate');
-    } else {
-      router.replace('/app');
-    }
-  };
-
   const handleSendCode = async (e) => {
     e.preventDefault();
     if (!email) return;
@@ -76,7 +77,7 @@ function AuthContent() {
       setUserId(token.userId);
       setStep('code');
     } catch (e) {
-      setError('Could not send code. Try again.');
+      setError(e.message || 'Could not send code. Try again.');
     } finally {
       setLoading(false);
     }
@@ -92,8 +93,8 @@ function AuthContent() {
       const { account } = createClient();
       await account.createSession(userId, code);
       await checkSession();
-    } catch {
-      setError('Wrong code. Try again.');
+    } catch (e) {
+      setError(e.message || 'Wrong code. Try again.');
     } finally {
       setLoading(false);
     }
