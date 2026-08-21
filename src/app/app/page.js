@@ -198,8 +198,21 @@ function AppContent() {
 
     const handleTouchMove = (e) => {
       if (touchStartY === null) return;
+      
+      // Check if user is scrolling inside a scrollable list
+      const scrollable = e.target.closest('.scrollable-area');
       const currentY = e.touches[0].clientY;
       const diff = currentY - touchStartY;
+      
+      // If we are in a scrollable area, and pulling down while not at the top, let native scroll happen
+      if (scrollable && scrollable.scrollTop > 0 && diff > 0) {
+        return;
+      }
+      // If we are in a scrollable area and pulling up while not at the bottom, let native scroll happen
+      if (scrollable && diff < 0 && scrollable.scrollHeight - scrollable.scrollTop > scrollable.clientHeight) {
+        return;
+      }
+
       if (diff > 0) {
         // Dragging down (closing direction)
         setModalTranslateY(diff);
@@ -222,21 +235,14 @@ function AppContent() {
         <div 
           className={styles.profileModal} 
           onClick={e => e.stopPropagation()}
-          style={{ transform: modalTranslateY > 0 ? `translateY(${modalTranslateY}px)` : undefined, transition: touchStartY ? 'none' : 'transform 0.3s ease' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ transform: modalTranslateY !== 0 ? `translateY(${modalTranslateY}px)` : undefined, transition: touchStartY ? 'none' : 'transform 0.3s ease' }}
         >
-          <div 
-            className={styles.dragHandle} 
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          />
+          <div className={styles.dragHandle} />
           
-          <div 
-            className={styles.sheetHeader}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
+          <div className={styles.sheetHeader}>
             <div className={styles.accountAvatar}>
               {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
             </div>
@@ -250,7 +256,7 @@ function AppContent() {
 
           <div className={styles.profileModalBody} style={{ padding: 0 }}>
             {menuView === 'main' ? (
-              <div className={styles.menuList}>
+              <div className={`${styles.menuList} scrollable-area`}>
                 <button className={styles.menuItem} onClick={() => setMenuView('saved')}>
                   <span className={styles.menuItemIcon}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -296,42 +302,45 @@ function AppContent() {
                   <h3 className="t-heading-3" style={{ margin: 0 }}>Edit Profile</h3>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Your Name</label>
-                  <input 
-                    type="text" 
-                    className="input" 
-                    value={accountForm.name} 
-                    onChange={e => setAccountForm(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-
-                <div className={styles.formGroup} style={{ marginTop: '1rem' }}>
-                  <label>Your Interests (Select at least 3)</label>
-                  <div className={styles.categoriesGrid}>
-                    {allCategories.map(cat => {
-                      const isSelected = accountForm.categories.includes(cat.id);
-                      return (
-                        <button
-                          key={cat.id}
-                          className={`pill ${isSelected ? 'pill-selected' : ''}`}
-                          onClick={() => toggleCategory(cat.id)}
-                          style={{ fontSize: '0.875rem', padding: '6px 12px' }}
-                        >
-                          {cat.emoji} {cat.name}
-                        </button>
-                      );
-                    })}
+                <div className="scrollable-area" style={{ overflowY: 'auto', flex: 1, paddingBottom: '2rem' }}>
+                  <div className={styles.formGroup}>
+                    <label>Your Name</label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      value={accountForm.name} 
+                      onChange={e => setAccountForm(prev => ({ ...prev, name: e.target.value }))}
+                    />
                   </div>
-                </div>
 
-                <button 
-                  className={`btn btn-primary btn-full ${styles.saveBtn}`}
-                  onClick={handleSaveAccount}
-                  disabled={isSavingAccount || accountForm.name.trim().length < 2 || accountForm.categories.length < 3}
-                >
-                  {isSavingAccount ? 'Saving...' : 'Save Changes'}
-                </button>
+                  <div className={styles.formGroup} style={{ marginTop: '1rem' }}>
+                    <label>Your Interests (Select at least 3)</label>
+                    <div className={styles.categoriesGrid}>
+                      {allCategories.map(cat => {
+                        const isSelected = accountForm.categories.includes(cat.id);
+                        return (
+                          <button
+                            key={cat.id}
+                            className={`pill ${isSelected ? 'pill-selected' : ''}`}
+                            onClick={() => toggleCategory(cat.id)}
+                            style={{ fontSize: '0.875rem', padding: '6px 12px' }}
+                          >
+                            {cat.emoji} {cat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <button 
+                    className={`btn btn-primary btn-full ${styles.saveBtn}`}
+                    onClick={handleSaveAccount}
+                    disabled={isSavingAccount || accountForm.name.trim().length < 2 || accountForm.categories.length < 3}
+                    style={{ marginTop: '2rem' }}
+                  >
+                    {isSavingAccount ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
               </div>
             ) : (
               <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -343,7 +352,7 @@ function AppContent() {
                 {isHistoryLoading ? (
                   <p style={{ textAlign: 'center', color: 'var(--white-60)', marginTop: '2rem' }}>Loading...</p>
                 ) : displayedHistory.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
+                  <div className="scrollable-area" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', flex: 1, paddingBottom: '2rem' }}>
                     {displayedHistory.map(item => (
                       <div key={item.id} className={styles.historyItem}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
