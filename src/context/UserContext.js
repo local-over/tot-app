@@ -102,21 +102,7 @@ export function UserProvider({ children }) {
     }
   }, [isLoading, user, pathname, router]);
 
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', height: '100dvh', width: '100vw', backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-        <Logo size={80} />
-      </div>
-    );
-  }
 
-  if (!isLoading && user && pathname === '/') {
-    return (
-      <div style={{ display: 'flex', height: '100dvh', width: '100vw', backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-        <Logo size={80} />
-      </div>
-    );
-  }
 
   return (
     <UserContext.Provider value={{ user, profile, isLoading, isNewUser, hasCompletedGate, isExpired, checkSession, logout, updateProfile, ensureDbUser }}>

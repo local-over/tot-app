@@ -2,7 +2,7 @@
   "name": "TOT",
   "short_name": "TOT",
   "description": "One topic. Every day. Picked just for you.",
-  "start_url": "/auth",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",

@@ -7,7 +7,7 @@ export default function Logo({ size = 80, className = '' }) {
         src="/logo.png"
         alt="TOT Logo"
         fill
-        style={{ objectFit: 'contain' }}
+        style={{ objectFit: 'contain', transform: 'scale(1.4)' }}
         priority
       />
     </div>
