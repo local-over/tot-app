@@ -139,6 +139,24 @@ function AppContent() {
 
   const [offlineMode, setOfflineMode] = useState(false);
 
+  const renderOfflineBanner = () => {
+    if (!offlineMode) return null;
+    return (
+      <div style={{
+        background: '#ff9800',
+        color: '#000',
+        padding: '0.5rem',
+        textAlign: 'center',
+        borderRadius: '8px',
+        marginBottom: '1rem',
+        fontSize: '0.875rem',
+        fontWeight: 600
+      }}>
+        You are offline. Showing latest downloaded topic.
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (isLoading) return;
     if (!user) { router.replace('/auth'); return; }
