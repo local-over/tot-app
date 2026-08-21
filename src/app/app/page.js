@@ -136,7 +136,7 @@ function AppContent() {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!user) { router.replace('/'); return; }
+    if (!user) { router.replace('/auth'); return; }
     if (!hasCompletedGate) { router.replace('/gate'); return; }
 
     if ('Notification' in window && Notification.permission === 'default') {

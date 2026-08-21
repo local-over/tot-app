@@ -30,12 +30,31 @@ export function UserProvider({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    checkSession();
+    if (!user) {
+      checkSession();
+    } else {
+      refreshProfileSilently();
+    }
   }, []);
+
+  const refreshProfileSilently = async () => {
+    if (!user?.email) return;
+    try {
+      const res = await fetch(`/api/users?email=${encodeURIComponent(user.email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setProfile(data.user);
+          localStorage.setItem('tot_profile', JSON.stringify(data.user));
+        }
+      }
+    } catch (err) {
+      console.warn('Could not refresh profile data (likely offline). Continuing with cached profile.');
+    }
+  };
 
   const checkSession = async () => {
     try {
-      // Don't set isLoading to true if we already have a cached user, to prevent UI blocking
       if (!user) setIsLoading(true);
       const { account } = createClient();
       const session = await account.get();
@@ -57,11 +76,15 @@ export function UserProvider({ children }) {
         setProfile(null);
         localStorage.removeItem('tot_profile');
       }
-    } catch {
-      setUser(null);
-      setProfile(null);
-      localStorage.removeItem('tot_user');
-      localStorage.removeItem('tot_profile');
+    } catch (err) {
+      if (err?.code === 401 || !user) {
+        setUser(null);
+        setProfile(null);
+        localStorage.removeItem('tot_user');
+        localStorage.removeItem('tot_profile');
+      } else {
+        console.warn('Network error checking session. Keeping cached user.');
+      }
     } finally {
       setIsLoading(false);
     }
