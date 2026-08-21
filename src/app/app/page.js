@@ -24,7 +24,7 @@ function AppContent() {
   });
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [historyTab, setHistoryTab] = useState('marked'); // 'marked', 'history', 'account'
+  const [menuView, setMenuView] = useState('main'); // 'main', 'saved', 'history', 'settings'
   const [userHistory, setUserHistory] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
@@ -48,15 +48,15 @@ function AppContent() {
 
   useEffect(() => {
     if (showProfileMenu) {
-      if (historyTab === 'marked' || historyTab === 'history') fetchHistory();
-      if (historyTab === 'account' && profile) {
+      if (menuView === 'saved' || menuView === 'history') fetchHistory();
+      if (menuView === 'settings' && profile) {
         setAccountForm({
           name: profile.name || '',
           categories: profile.categories || []
         });
       }
     }
-  }, [showProfileMenu, historyTab, profile]);
+  }, [showProfileMenu, menuView, profile]);
 
   const handleSaveAccount = async () => {
     if (accountForm.name.trim().length < 2 || accountForm.categories.length < 3) return;
@@ -184,50 +184,53 @@ function AppContent() {
 
   const renderProfileModal = () => {
     if (!showProfileMenu) return null;
-    const displayedHistory = historyTab === 'marked' 
+    const displayedHistory = menuView === 'saved' 
       ? userHistory.filter(h => h.isMarked) 
       : userHistory;
 
     return (
       <div className={styles.profileModalOverlay} onClick={() => setShowProfileMenu(false)}>
         <div className={styles.profileModal} onClick={e => e.stopPropagation()}>
-          <div className={styles.profileModalHeader}>
-            <h2 className="t-heading-2">Profile</h2>
-            <button className={styles.closeBtn} onClick={() => setShowProfileMenu(false)}>&times;</button>
+          <div className={styles.dragHandle} />
+          
+          <div className={styles.sheetHeader}>
+            <div className={styles.accountAvatar}>
+              {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <h3 className="t-heading-2">{profile?.name || user?.name || 'User'}</h3>
+            <div className={styles.accountPlanBadge}>
+              {profile?.plan === 'student' ? '🎓 Free for 1 year (Student)' 
+                : profile?.plan === 'free_month' ? 'First month free' 
+                : '$1 / month'}
+            </div>
           </div>
-          <div className={styles.tabBar}>
-            <button 
-              className={`${styles.tab} ${historyTab === 'marked' ? styles.tabActive : ''}`}
-              onClick={() => setHistoryTab('marked')}
-            >
-              Saved
-            </button>
-            <button 
-              className={`${styles.tab} ${historyTab === 'history' ? styles.tabActive : ''}`}
-              onClick={() => setHistoryTab('history')}
-            >
-              History
-            </button>
-            <button 
-              className={`${styles.tab} ${historyTab === 'account' ? styles.tabActive : ''}`}
-              onClick={() => setHistoryTab('account')}
-            >
-              Account
-            </button>
-          </div>
-          <div className={styles.profileModalBody}>
-            {historyTab === 'account' ? (
+
+          <div className={styles.profileModalBody} style={{ padding: 0 }}>
+            {menuView === 'main' ? (
+              <div className={styles.menuList}>
+                <button className={styles.menuItem} onClick={() => setMenuView('saved')}>
+                  <span className={styles.menuItemIcon}>🔖</span>
+                  Saved Articles
+                </button>
+                <button className={styles.menuItem} onClick={() => setMenuView('history')}>
+                  <span className={styles.menuItemIcon}>⏱️</span>
+                  Reading History
+                </button>
+                <button className={styles.menuItem} onClick={() => setMenuView('settings')}>
+                  <span className={styles.menuItemIcon}>⚙️</span>
+                  Edit Profile & Interests
+                </button>
+                <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '0.5rem 1rem' }} />
+                <button className={styles.menuItem} onClick={() => logout(true)} style={{ color: '#ff6b6b' }}>
+                  <span className={styles.menuItemIcon}>🚪</span>
+                  Log Out
+                </button>
+              </div>
+            ) : menuView === 'settings' ? (
               <div className={styles.accountFormSection}>
-                <div className={styles.accountAvatar}>
-                  {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <h3 className="t-heading-2">{profile?.name}</h3>
-                  <div className={styles.accountPlanBadge}>
-                    {profile?.plan === 'student' ? '🎓 Free for 1 year (Student)' 
-                     : profile?.plan === 'free_month' ? 'First month free' 
-                     : '$1 / month'}
-                  </div>
+                <div className={styles.sheetTitleBar}>
+                  <button className={styles.backBtn} onClick={() => setMenuView('main')}>←</button>
+                  <h3 className="t-heading-3" style={{ margin: 0 }}>Edit Profile</h3>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -266,36 +269,41 @@ function AppContent() {
                 >
                   {isSavingAccount ? 'Saving...' : 'Save Changes'}
                 </button>
-
-                <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-                  <button className={styles.logoutBtn} onClick={() => logout(true)} style={{ width: '100%', margin: 0 }}>
-                    Log Out
-                  </button>
-                </div>
               </div>
-            ) : isHistoryLoading ? (
-              <p style={{ textAlign: 'center', color: 'var(--white-60)' }}>Loading...</p>
-            ) : displayedHistory.length > 0 ? (
-              displayedHistory.map(item => (
-                <div key={item.id} className={styles.historyItem}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <span className={styles.historyDate}>{item.date}</span>
-                    <button 
-                      className={`${styles.bookmarkBtn} ${item.isMarked ? styles.bookmarkBtnActive : ''}`}
-                      onClick={() => toggleMark(item.id, item.isMarked)}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill={item.isMarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                    </button>
-                  </div>
-                  <h3 className={styles.historyTitle}>{item.title}</h3>
-                </div>
-              ))
             ) : (
-              <p style={{ textAlign: 'center', color: 'var(--white-60)' }}>
-                {historyTab === 'marked' ? 'No saved articles yet.' : 'No reading history yet.'}
-              </p>
+              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div className={styles.sheetTitleBar}>
+                  <button className={styles.backBtn} onClick={() => setMenuView('main')}>←</button>
+                  <h3 className="t-heading-3" style={{ margin: 0 }}>{menuView === 'saved' ? 'Saved Articles' : 'Reading History'}</h3>
+                </div>
+                
+                {isHistoryLoading ? (
+                  <p style={{ textAlign: 'center', color: 'var(--white-60)', marginTop: '2rem' }}>Loading...</p>
+                ) : displayedHistory.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
+                    {displayedHistory.map(item => (
+                      <div key={item.id} className={styles.historyItem}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <span className={styles.historyDate}>{item.date}</span>
+                          <button 
+                            className={`${styles.bookmarkBtn} ${item.isMarked ? styles.bookmarkBtnActive : ''}`}
+                            onClick={() => toggleMark(item.id, item.isMarked)}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill={item.isMarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                          </button>
+                        </div>
+                        <h3 className={styles.historyTitle}>{item.title}</h3>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ textAlign: 'center', color: 'var(--white-60)', marginTop: '2rem' }}>
+                    {menuView === 'saved' ? 'No saved articles yet.' : 'No reading history yet.'}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>
