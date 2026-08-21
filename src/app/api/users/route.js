@@ -23,6 +23,8 @@ export async function POST(request) {
     if (profile?.streak !== undefined) data.streak = profile.streak;
     if (profile?.gateCompleted !== undefined) data.gateCompleted = profile.gateCompleted;
     if (profile?.studentEmail !== undefined) data.studentEmail = profile.studentEmail;
+    if (profile?.plan_expires_at !== undefined) data.plan_expires_at = profile.plan_expires_at;
+    if (profile?.dodo_subscription_id !== undefined) data.dodo_subscription_id = profile.dodo_subscription_id;
 
     if (isStudent !== undefined) {
       data.isStudent = isStudent;
@@ -39,11 +41,18 @@ export async function POST(request) {
       const isEdu = email.toLowerCase().endsWith('.edu') || email.toLowerCase().endsWith('.ac.uk');
       const isStudentFinal = data.isStudent || isEdu;
       
+      const planName = isStudentFinal ? 'student' : (data.plan || 'free_month');
+      // Set expiration: 365 days for student, 30 days for free_month
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + (planName === 'student' ? 365 : 30));
+      
       result = await databases.createDocument('tot_db', 'users', ID.unique(), {
         ...data,
         name: data.name || '',
         isStudent: isStudentFinal,
-        plan: isStudentFinal ? 'student' : (data.plan || 'free_month'),
+        plan: planName,
+        plan_expires_at: data.plan_expires_at || expDate.toISOString(),
+        dodo_subscription_id: data.dodo_subscription_id || '',
         streak: data.streak || 0,
         gateCompleted: data.gateCompleted || isEdu,
         studentEmail: isEdu ? email.toLowerCase() : (data.studentEmail || '')

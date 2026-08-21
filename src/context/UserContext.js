@@ -43,7 +43,8 @@ export function UserProvider({ children }) {
   };
 
   const isNewUser = !!user && !profile?.readingTime;
-  const hasCompletedGate = !!profile?.gateCompleted;
+  const isExpired = profile?.plan_expires_at ? new Date(profile.plan_expires_at) < new Date() : false;
+  const hasCompletedGate = !!profile?.gateCompleted && !isExpired;
 
   const logout = async (noRedirect = false) => {
     try {
@@ -94,11 +95,7 @@ export function UserProvider({ children }) {
   };
 
   return (
-    <UserContext.Provider value={{
-      user, profile, isLoading,
-      isNewUser, hasCompletedGate,
-      checkSession, logout, updateProfile, ensureDbUser
-    }}>
+    <UserContext.Provider value={{ user, profile, isLoading, isNewUser, hasCompletedGate, isExpired, checkSession, logout, updateProfile, ensureDbUser }}>
       {children}
     </UserContext.Provider>
   );

@@ -32,6 +32,7 @@ function AppContent() {
   
   const [accountForm, setAccountForm] = useState({ name: '', categories: [] });
   const [isSavingAccount, setIsSavingAccount] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Swipe-to-dismiss logic
   const [touchStartY, setTouchStartY] = useState(null);
@@ -64,10 +65,34 @@ function AppContent() {
   }, [showProfileMenu, menuView, profile]);
 
   const handleSaveAccount = async () => {
-    if (accountForm.name.trim().length < 2 || accountForm.categories.length < 3) return;
     setIsSavingAccount(true);
-    await updateProfile({ name: accountForm.name.trim(), categories: accountForm.categories });
+    try {
+      await updateProfile({ name: accountForm.name, categories: accountForm.categories });
+    } catch (err) {
+      console.error(err);
+    }
     setIsSavingAccount(false);
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel? You will lose access at the end of your billing cycle.')) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dodo_subscription_id: profile?.dodo_subscription_id, userId: user?.id })
+      });
+      if (res.ok) {
+        alert('Subscription scheduled for cancellation.');
+        await updateProfile({ dodo_subscription_id: '' }); 
+      } else {
+        alert('Could not cancel subscription. Contact support.');
+      }
+    } catch (err) {
+      alert('Error cancelling subscription');
+    }
+    setIsCancelling(false);
   };
 
   const toggleCategory = (catId) => {
@@ -339,6 +364,36 @@ function AppContent() {
                           </button>
                         );
                       })}
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup} style={{ marginTop: '2rem' }}>
+                    <label>Payment Settings</label>
+                    <div style={{ padding: '1rem', background: 'var(--surface-3)', borderRadius: '12px', marginTop: '0.5rem' }}>
+                      <p style={{ margin: '0 0 0.5rem', color: 'var(--white)' }}>
+                        <strong>Current Plan:</strong> {profile?.plan === 'student' ? 'Student (Free Year)' : profile?.plan === 'free_month' ? 'Free Month' : 'Paid Subscription'}
+                      </p>
+                      <p style={{ margin: '0', color: 'var(--white-60)' }}>
+                        <strong>Access valid until:</strong> {profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString() : 'Unknown'}
+                      </p>
+                      
+                      {profile?.dodo_subscription_id && (
+                        <button 
+                          onClick={handleCancelSubscription}
+                          disabled={isCancelling}
+                          style={{ 
+                            marginTop: '1rem', 
+                            background: 'transparent', 
+                            border: '1px solid var(--error)', 
+                            color: 'var(--error)', 
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
+                        </button>
+                      )}
                     </div>
                   </div>
 

@@ -8,11 +8,11 @@ import DeviceGuard from '@/components/DeviceGuard';
 import styles from './gate.module.css';
 
 function GateContent() {
-  const { user, profile, isLoading, hasCompletedGate, updateProfile } = useUser();
+  const { user, profile, isLoading, hasCompletedGate, isExpired, updateProfile, logout } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [screen, setScreen] = useState('choose'); // 'choose', 'student', 'success'
+  const [screen, setScreen] = useState('choose'); // 'choose', 'student', 'success', 'expired'
   const [studentEmail, setStudentEmail] = useState('');
   const [studentError, setStudentError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,7 +21,13 @@ function GateContent() {
 
   const handleCheckoutSuccess = async () => {
     setScreen('success');
-    await updateProfile({ gateCompleted: true, plan: 'free_month' });
+    
+    // For DodoPayments success, we don't automatically set free_month, 
+    // we just mark gateCompleted (webhook handles the rest ideally, but we can optimistically unlock)
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() + 30); // Optimistic 30 days
+    await updateProfile({ gateCompleted: true, plan: 'paid_subscription', plan_expires_at: expDate.toISOString() });
+    
     setTimeout(() => {
       router.replace('/app');
     }, 2000);
@@ -35,9 +41,13 @@ function GateContent() {
       return;
     }
     
-    if (hasCompletedGate && !searchParams.get('success')) {
+    if (hasCompletedGate && !isExpired && !searchParams.get('success')) {
       router.replace('/app');
       return;
+    }
+    
+    if (isExpired && !searchParams.get('success')) {
+      setScreen('expired');
     }
     
     if (searchParams.get('success') === 'true') {
@@ -45,9 +55,27 @@ function GateContent() {
       handleCheckoutSuccess();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isLoading, hasCompletedGate, searchParams, router]);
+  }, [user, isLoading, hasCompletedGate, isExpired, searchParams, router]);
 
   const handleStartFreeMonth = async () => {
+    setIsSubmitting(true);
+    try {
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + 30);
+      
+      await updateProfile({ 
+        gateCompleted: true, 
+        plan: 'free_month',
+        plan_expires_at: expDate.toISOString() 
+      });
+      router.replace('/app');
+    } catch (err) {
+      console.error(err);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/checkout', {
@@ -254,43 +282,82 @@ function GateContent() {
     <div className="app-desktop-shell">
       <div className="app-desktop-card">
         <div className={styles.page}>
-          <div className={styles.header}>
-            <Logo />
-            <h1 className="t-heading-1">Almost there</h1>
-            <p className="t-body" style={{ color: 'var(--text-secondary)' }}>
-              Choose how you&apos;d like to access TOT
-            </p>
-          </div>
           
-          <div className={styles.cards}>
-            <div className={`${styles.card} ${styles.cardFeatured}`}>
-              <div>
-                <span className={styles.badge}>First month free</span>
-                <h2 className="t-heading-2">Individual</h2>
-                <div className={styles.price}>$1/month</div>
+          {screen === 'expired' && (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div className={styles.header}>
+                <Logo />
+                <h1 className="t-heading-1">Trial Expired</h1>
+                <p className="t-body" style={{ color: 'var(--text-secondary)' }}>
+                  Your free trial has ended. Subscribe to maintain your streak and continue reading exactly what you want, when you want.
+                </p>
               </div>
-              <button 
-                className="btn btn-primary btn-large btn-full" 
-                onClick={handleStartFreeMonth}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Loading...' : 'Start free month'}
-              </button>
-            </div>
-            
-            <div className={styles.card}>
-              <div>
-                <h2 className="t-heading-2">Student 🎓</h2>
-                <div className={styles.price}>Free for 1 year</div>
+              <div className={styles.cards} style={{ marginTop: 'auto' }}>
+                <div className={`${styles.card} ${styles.cardFeatured}`}>
+                  <div>
+                    <h2 className="t-heading-2">Individual</h2>
+                    <div className={styles.price}>$1/month</div>
+                  </div>
+                  <button 
+                    className="btn btn-primary btn-large btn-full"
+                    onClick={handleSubscribe}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Loading...' : 'Subscribe'}
+                  </button>
+                  <button 
+                    className="btn btn-full"
+                    style={{ backgroundColor: 'transparent', color: 'var(--white-60)', marginTop: '0.5rem' }}
+                    onClick={() => logout()}
+                  >
+                    Log Out
+                  </button>
+                </div>
               </div>
-              <button 
-                className="btn btn-secondary btn-full" 
-                onClick={() => setScreen('student')}
-              >
-                Verify student email
-              </button>
             </div>
-          </div>
+          )}
+
+          {screen === 'choose' && (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div className={styles.header}>
+                <Logo />
+                <h1 className="t-heading-1">Almost there</h1>
+                <p className="t-body" style={{ color: 'var(--text-secondary)' }}>
+                  Choose how you&apos;d like to access TOT. You won&apos;t be charged today.
+                </p>
+              </div>
+              <div className={styles.cards} style={{ marginTop: 'auto' }}>
+                <div className={`${styles.card} ${styles.cardFeatured}`}>
+                  <div>
+                    <span className={styles.badge}>First month free</span>
+                    <h2 className="t-heading-2">Individual</h2>
+                    <div className={styles.price}>$1/month</div>
+                  </div>
+                  <button 
+                    className="btn btn-primary btn-large btn-full" 
+                    onClick={handleStartFreeMonth}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Loading...' : 'Start free month'}
+                  </button>
+                </div>
+                
+                <div className={styles.card}>
+                  <div>
+                    <h2 className="t-heading-2">Student 🎓</h2>
+                    <div className={styles.price}>Free for 1 year</div>
+                  </div>
+                  <button 
+                    className="btn btn-secondary btn-full" 
+                    onClick={() => setScreen('student')}
+                  >
+                    Verify student email
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
         </div>
       </div>
     </div>
