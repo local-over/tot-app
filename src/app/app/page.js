@@ -199,10 +199,14 @@ function AppContent() {
             localStorage.setItem('tot_latest_topic', JSON.stringify(data));
             setOfflineMode(false);
           } else {
-            throw new Error('Network response was not ok');
+            // It's an HTTP error, like 404 (No topics) or 500
+            console.warn(`Server returned ${res.status}: ${res.statusText}`);
+            setOfflineMode(false); // We reached the server, so we are online
+            setTopic(null); // No topic available
           }
         } catch (err) {
-          console.warn("Failed to fetch today's topic, using cache:", err);
+          // This catch block usually catches network errors (TypeError: Failed to fetch)
+          console.warn("Network error fetching today's topic, using cache:", err);
           setOfflineMode(true);
         } finally {
           if (!cachedTopic) {
@@ -609,8 +613,8 @@ function AppContent() {
       return (
         <div className="app-desktop-shell">
           <div className="app-desktop-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center' }}>
-            <h2 className="t-heading-2">Topic not loaded</h2>
-            <p className="t-body" style={{ color: 'var(--white-60)', margin: '1rem 0 2rem' }}>Please connect to the internet to download your first topic.</p>
+            <h2 className="t-heading-2">No Topic Available</h2>
+            <p className="t-body" style={{ color: 'var(--white-60)', margin: '1rem 0 2rem' }}>We couldn't find a topic matching your interests today. Check back later!</p>
             <button className="btn btn-primary" onClick={() => setScreen('home')}>Go Back</button>
           </div>
         </div>
