@@ -39,16 +39,20 @@ import PWARegistry from "@/components/PWARegistry";
 import SmartUpdater from "@/components/SmartUpdater";
 import NotificationManager from "@/components/NotificationManager";
 
+import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body>
-        <UserProvider>
-          {children}
-          <PWARegistry />
-          <SmartUpdater />
-          <NotificationManager />
-        </UserProvider>
+        <GlobalErrorBoundary>
+          <UserProvider>
+            {children}
+            <PWARegistry />
+            <SmartUpdater />
+            <NotificationManager />
+          </UserProvider>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );
