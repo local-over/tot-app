@@ -20,18 +20,12 @@ export async function POST(request) {
     }
 
     // 2. Verify the code with Appwrite by hitting the REST API directly
-    const verifyRes = await fetch('https://nyc.cloud.appwrite.io/v1/account/sessions/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Appwrite-Project': process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID,
-      },
-      body: JSON.stringify({ userId: studentUserId, secret })
-    });
-
-    if (!verifyRes.ok) {
-      const errData = await verifyRes.json();
-      return NextResponse.json({ error: errData.message || 'Invalid code' }, { status: 400 });
+    const { account } = createAdminClient();
+    let session;
+    try {
+      session = await account.createSession(studentUserId, secret);
+    } catch (verifyErr) {
+      return NextResponse.json({ error: verifyErr.message || 'Invalid code' }, { status: 400 });
     }
 
     // 3. Code is valid! Update the current user's profile
