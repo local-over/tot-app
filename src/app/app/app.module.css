@@ -381,6 +381,7 @@
   align-items: flex-end; /* changed from center to flex-end */
   justify-content: center;
   animation: fadeIn 0.2s ease-out forwards;
+  overscroll-behavior-y: none;
 }
 
 .profileModal {
@@ -395,6 +396,7 @@
   overflow: hidden;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+  overscroll-behavior-y: none;
 }
 
 @keyframes slideUp {

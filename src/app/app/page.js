@@ -32,6 +32,10 @@ function AppContent() {
   const [accountForm, setAccountForm] = useState({ name: '', categories: [] });
   const [isSavingAccount, setIsSavingAccount] = useState(false);
 
+  // Swipe-to-dismiss logic
+  const [touchStartY, setTouchStartY] = useState(null);
+  const [modalTranslateY, setModalTranslateY] = useState(0);
+
   const fetchHistory = async () => {
     setIsHistoryLoading(true);
     try {
@@ -188,12 +192,49 @@ function AppContent() {
       ? userHistory.filter(h => h.isMarked) 
       : userHistory;
 
+    const handleTouchStart = (e) => {
+      setTouchStartY(e.touches[0].clientY);
+    };
+
+    const handleTouchMove = (e) => {
+      if (touchStartY === null) return;
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - touchStartY;
+      if (diff > 0) {
+        // Prevent default only if we are swiping down from the very top of the modal or on the drag handle
+        // But to be safe and simple, we'll just track the visual translation
+        setModalTranslateY(diff);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (modalTranslateY > 100) {
+        setShowProfileMenu(false);
+      }
+      setTouchStartY(null);
+      setModalTranslateY(0);
+    };
+
     return (
       <div className={styles.profileModalOverlay} onClick={() => setShowProfileMenu(false)}>
-        <div className={styles.profileModal} onClick={e => e.stopPropagation()}>
-          <div className={styles.dragHandle} />
+        <div 
+          className={styles.profileModal} 
+          onClick={e => e.stopPropagation()}
+          style={{ transform: modalTranslateY > 0 ? `translateY(${modalTranslateY}px)` : undefined, transition: touchStartY ? 'none' : 'transform 0.3s ease' }}
+        >
+          <div 
+            className={styles.dragHandle} 
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          />
           
-          <div className={styles.sheetHeader}>
+          <div 
+            className={styles.sheetHeader}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <div className={styles.accountAvatar}>
               {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
             </div>
