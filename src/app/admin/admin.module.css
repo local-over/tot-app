@@ -144,3 +144,117 @@
 .deleteButton:hover {
   background: rgba(255, 82, 82, 0.1);
 }
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: var(--surface-100, #1a1a1a);
+  border: 1px solid var(--surface-200, #333);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--surface-200, #333);
+  padding-bottom: 1rem;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.editButton {
+  background: var(--surface-200, #333);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.editButton:hover {
+  background: var(--surface-300, #444);
+}
+
+.saveButton {
+  background: var(--brand-primary, #4caf50);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.closeButton {
+  background: transparent;
+  color: #aaa;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #aaa;
+  font-size: 0.875rem;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-200, #444);
+  background: var(--surface-50, #111);
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.previewBody p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.previewFact {
+  background: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid var(--brand-primary, #4caf50);
+  padding: 1rem;
+  margin: 2rem 0;
+  border-radius: 0 8px 8px 0;
+}
