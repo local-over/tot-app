@@ -6,6 +6,17 @@ import { Query, ID } from 'appwrite';
 
 const DB_ID = 'tot_db';
 
+let cachedTopics = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+async function getDeterministicId(userId, dateStr) {
+  const data = userId + '_' + dateStr;
+  const hashBuffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(data));
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 36);
+}
+
 export async function GET(request) {
   const { searchParams } = request.nextUrl;
   const userId = searchParams.get('userId');
@@ -46,14 +57,23 @@ export async function GET(request) {
       }
     }
 
-    // 2. We need to generate a new topic. Fetch all topics.
-    const topicsRes = await databases.listDocuments(DB_ID, 'topics', [Query.limit(1000)]);
-    const topics = topicsRes.documents.map(t => ({
-      ...t,
-      body: JSON.parse(t.body || '[]'),
-      resources: t.resources ? JSON.parse(t.resources) : [],
-      teasers: t.teasers ? JSON.parse(t.teasers) : []
-    }));
+    // 2. We need to generate a new topic. Fetch all topics using Edge Cache.
+    let topics;
+    const now = Date.now();
+    
+    if (cachedTopics && (now - lastCacheTime < CACHE_TTL)) {
+      topics = cachedTopics;
+    } else {
+      const topicsRes = await databases.listDocuments(DB_ID, 'topics', [Query.limit(1000)]);
+      topics = topicsRes.documents.map(t => ({
+        ...t,
+        body: JSON.parse(t.body || '[]'),
+        resources: t.resources ? JSON.parse(t.resources) : [],
+        teasers: t.teasers ? JSON.parse(t.teasers) : []
+      }));
+      cachedTopics = topics;
+      lastCacheTime = now;
+    }
 
     // 3. Fetch user feedback history
     const feedbackRes = await databases.listDocuments(DB_ID, 'feedback', [
@@ -72,12 +92,35 @@ export async function GET(request) {
 
     if (recommendedTopic) {
       const topicId = recommendedTopic.id || recommendedTopic.$id;
-      // Save assignment
-      const newAssignment = await databases.createDocument(DB_ID, 'daily_assignments', ID.unique(), {
-        userId,
-        topicId: topicId,
-        date: todayDate
-      });
+      const assignmentId = await getDeterministicId(userId, todayDate);
+      
+      let newAssignment;
+      try {
+        newAssignment = await databases.createDocument(DB_ID, 'daily_assignments', assignmentId, {
+          userId,
+          topicId: topicId,
+          date: todayDate
+        });
+      } catch (err) {
+        if (err.code === 409) {
+          // A duplicate request beat us to creating the assignment
+          console.log("Duplicate assignment caught! Returning existing.");
+          const dupAssignment = await databases.getDocument(DB_ID, 'daily_assignments', assignmentId);
+          const topicDoc = await databases.getDocument(DB_ID, 'topics', dupAssignment.topicId);
+          const parsedTopic = {
+            ...topicDoc,
+            id: topicDoc.$id,
+            assignmentId: dupAssignment.$id,
+            isMarked: dupAssignment.isMarked || false,
+            body: JSON.parse(topicDoc.body || '[]'),
+            resources: topicDoc.resources ? JSON.parse(topicDoc.resources) : [],
+            teasers: topicDoc.teasers ? JSON.parse(topicDoc.teasers) : []
+          };
+          return NextResponse.json(parsedTopic, { status: 200 });
+        }
+        throw err;
+      }
+      
       // Ensure the recommended topic has .id
       recommendedTopic.id = topicId;
       recommendedTopic.assignmentId = newAssignment.$id;

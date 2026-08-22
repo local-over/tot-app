@@ -30,35 +30,40 @@ export async function GET(request) {
     ]);
     const feedbackTopicIds = new Set(feedbackRes.documents.map(f => f.topicId));
     
-    // For each assignment, fetch the corresponding topic to get the title and category
-    // Doing this in parallel to be fast, but edge runtime is fine with this
-    const history = await Promise.all(
-      assignments.map(async (assignment) => {
-        try {
-          // If the user hasn't read it (no feedback), skip it unless it's marked/saved
-          if (!feedbackTopicIds.has(assignment.topicId) && !assignment.isMarked) {
-            return null;
-          }
-
-          const topic = await databases.getDocument(DB_ID, 'topics', assignment.topicId);
-          return {
-            id: assignment.$id,
-            topicId: assignment.topicId,
-            date: assignment.date,
-            isMarked: assignment.isMarked || false,
-            title: topic.title,
-            categoryId: topic.categoryId,
-            readTime: topic.readTime,
-            vibe: topic.vibe
-          };
-        } catch (e) {
-          // If a topic was deleted, just ignore it
-          return null;
-        }
-      })
+    // Filter assignments that are read or marked
+    const validAssignments = assignments.filter(assignment => 
+      feedbackTopicIds.has(assignment.topicId) || assignment.isMarked
     );
 
-    const validHistory = history.filter(h => h !== null);
+    if (validAssignments.length === 0) {
+      return NextResponse.json({ history: [] });
+    }
+
+    const topicIds = [...new Set(validAssignments.map(a => a.topicId))];
+    
+    // Fetch all relevant topics in one query instead of N+1
+    const topicsRes = await databases.listDocuments(DB_ID, 'topics', [
+      Query.equal('$id', topicIds),
+      Query.limit(50)
+    ]);
+    
+    const topicsMap = new Map(topicsRes.documents.map(t => [t.$id, t]));
+
+    const validHistory = validAssignments.map(assignment => {
+      const topic = topicsMap.get(assignment.topicId);
+      if (!topic) return null; // Topic was deleted
+
+      return {
+        id: assignment.$id,
+        topicId: assignment.topicId,
+        date: assignment.date,
+        isMarked: assignment.isMarked || false,
+        title: topic.title,
+        categoryId: topic.categoryId,
+        readTime: topic.readTime,
+        vibe: topic.vibe
+      };
+    }).filter(h => h !== null);
 
     return NextResponse.json({ history: validHistory });
   } catch (error) {
