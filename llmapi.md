@@ -22,7 +22,8 @@ Fetch all published articles in the database.
 
 **Optional Query Params:**
 - `category` (string): Filter by a specific category id (e.g. `science`, `history`)
-- `vibe` (string): Filter by vibe (e.g. `fun`, `learn`, `deep`)
+- `vibe` (string): Filter by a specific vibe (e.g. `fun`, `practical`)
+- `includeStats` (boolean): Pass `true` to include feedback analytics for each topic (`stats.avgRating`, `stats.feedbackCount`, etc.). This is extremely useful for generating reports on which topics are underperforming before deleting them.
 
 **Response:**
 Returns an array of topic objects.

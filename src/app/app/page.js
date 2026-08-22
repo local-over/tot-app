@@ -230,6 +230,13 @@ function AppContent() {
       let target = new Date();
       target.setHours(targetHour, 0, 0, 0);
 
+      const lastReadStr = typeof window !== 'undefined' ? localStorage.getItem('tot_last_read_date') : null;
+      const todayStr = new Date().toDateString();
+      if (lastReadStr === todayStr) {
+        // User already read today's topic, so the next topic unlocks tomorrow
+        target.setDate(target.getDate() + 1);
+      }
+
       const diff = target - now;
       if (diff <= 0) { 
         setIsReady(true);
@@ -331,6 +338,10 @@ function AppContent() {
         await updateProfile({ streak: (profile.streak || 0) + 1 });
       }
     } catch {}
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tot_last_read_date', new Date().toDateString());
+    }
+    setIsReady(false);
     setScreen('done');
     setRatingStep(0);
     setRatingData({ rating: null, moreOrLess: null, length: null });
@@ -730,7 +741,14 @@ function AppContent() {
               )}
 
               <div style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center' }}>
-                <button className="btn btn-primary btn-large btn-full" onClick={() => setScreen('rating')}>
+                <button className="btn btn-primary btn-large btn-full" onClick={() => {
+                  const lastReadStr = typeof window !== 'undefined' ? localStorage.getItem('tot_last_read_date') : null;
+                  if (lastReadStr === new Date().toDateString()) {
+                    setScreen('done');
+                  } else {
+                    setScreen('rating');
+                  }
+                }}>
                   Done reading
                 </button>
               </div>

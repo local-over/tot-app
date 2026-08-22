@@ -18,6 +18,7 @@ export async function GET(request) {
   const { searchParams } = request.nextUrl;
   const category = searchParams.get('category');
   const vibe = searchParams.get('vibe');
+  const includeStats = searchParams.get('includeStats') === 'true';
 
   try {
     const { databases } = createAdminClient();
@@ -29,14 +30,40 @@ export async function GET(request) {
 
     const response = await databases.listDocuments(DB_ID, COLLECTION_ID, queries);
     
+    let feedbackDocs = [];
+    if (includeStats) {
+      try {
+        const feedbackResponse = await databases.listDocuments(DB_ID, 'feedback', [Query.limit(5000)]);
+        feedbackDocs = feedbackResponse.documents;
+      } catch (err) {
+        console.warn("Could not fetch feedback stats", err);
+      }
+    }
+
     // Parse JSON fields and map $id to id
-    const parsedTopics = response.documents.map(doc => ({
-      ...doc,
-      id: doc.$id,
-      body: JSON.parse(doc.body || '[]'),
-      resources: doc.resources ? JSON.parse(doc.resources) : [],
-      teasers: doc.teasers ? JSON.parse(doc.teasers) : []
-    }));
+    const parsedTopics = response.documents.map(doc => {
+      const topic = {
+        ...doc,
+        id: doc.$id,
+        body: JSON.parse(doc.body || '[]'),
+        resources: doc.resources ? JSON.parse(doc.resources) : [],
+        teasers: doc.teasers ? JSON.parse(doc.teasers) : []
+      };
+
+      if (includeStats) {
+        const tf = feedbackDocs.filter(f => f.topicId === doc.$id);
+        topic.stats = {
+          feedbackCount: tf.length,
+          avgRating: tf.length ? parseFloat((tf.reduce((a, b) => a + (b.rating || 0), 0) / tf.length).toFixed(1)) : 0,
+          tooLongCount: tf.filter(f => f.length === 'long').length,
+          tooShortCount: tf.filter(f => f.length === 'short').length,
+          wantMoreCount: tf.filter(f => f.moreOrLess === 'more').length,
+          wantLessCount: tf.filter(f => f.moreOrLess === 'less').length,
+        };
+      }
+
+      return topic;
+    });
 
     return NextResponse.json(parsedTopics, { status: 200 });
   } catch (error) {
