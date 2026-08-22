@@ -874,13 +874,6 @@ function AppContent() {
                 <button className="btn btn-primary btn-large btn-full" onClick={() => setScreen('home')}>
                   See you tomorrow
                 </button>
-                <button 
-                  className="btn btn-full" 
-                  onClick={() => setScreen('reading')} 
-                  style={{ marginTop: '1rem', background: 'transparent', color: 'var(--white-60)' }}
-                >
-                  Check back the article
-                </button>
               </div>
             </div>
           </div>

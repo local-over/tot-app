@@ -23,11 +23,23 @@ export async function GET(request) {
 
     const assignments = assignmentsRes.documents;
     
+    // Fetch user's feedback to verify which ones they actually read
+    const feedbackRes = await databases.listDocuments(DB_ID, 'feedback', [
+      Query.equal('userId', userId),
+      Query.limit(1000)
+    ]);
+    const feedbackTopicIds = new Set(feedbackRes.documents.map(f => f.topicId));
+    
     // For each assignment, fetch the corresponding topic to get the title and category
     // Doing this in parallel to be fast, but edge runtime is fine with this
     const history = await Promise.all(
       assignments.map(async (assignment) => {
         try {
+          // If the user hasn't read it (no feedback), skip it unless it's marked/saved
+          if (!feedbackTopicIds.has(assignment.topicId) && !assignment.isMarked) {
+            return null;
+          }
+
           const topic = await databases.getDocument(DB_ID, 'topics', assignment.topicId);
           return {
             id: assignment.$id,
