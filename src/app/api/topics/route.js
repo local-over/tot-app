@@ -34,7 +34,8 @@ export async function GET(request) {
       ...doc,
       id: doc.$id,
       body: JSON.parse(doc.body || '[]'),
-      resources: doc.resources ? JSON.parse(doc.resources) : []
+      resources: doc.resources ? JSON.parse(doc.resources) : [],
+      teasers: doc.teasers ? JSON.parse(doc.teasers) : []
     }));
 
     return NextResponse.json(parsedTopics, { status: 200 });
@@ -70,7 +71,8 @@ export async function POST(request) {
       body: JSON.stringify(body.body),
       closingFact: body.closingFact || '',
       imageUrl: body.imageUrl || '',
-      resources: JSON.stringify(body.resources || [])
+      resources: JSON.stringify(body.resources || []),
+      teasers: JSON.stringify(body.teasers || [])
     };
 
     const result = await databases.createDocument(DB_ID, COLLECTION_ID, docId, data);

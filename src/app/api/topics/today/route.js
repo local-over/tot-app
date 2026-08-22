@@ -36,7 +36,8 @@ export async function GET(request) {
           assignmentId: existingAssignment.documents[0].$id,
           isMarked: existingAssignment.documents[0].isMarked || false,
           body: JSON.parse(topicDoc.body || '[]'),
-          resources: topicDoc.resources ? JSON.parse(topicDoc.resources) : []
+          resources: topicDoc.resources ? JSON.parse(topicDoc.resources) : [],
+          teasers: topicDoc.teasers ? JSON.parse(topicDoc.teasers) : []
         };
         return NextResponse.json(parsedTopic, { status: 200 });
       } catch (err) {
@@ -50,7 +51,8 @@ export async function GET(request) {
     const topics = topicsRes.documents.map(t => ({
       ...t,
       body: JSON.parse(t.body || '[]'),
-      resources: t.resources ? JSON.parse(t.resources) : []
+      resources: t.resources ? JSON.parse(t.resources) : [],
+      teasers: t.teasers ? JSON.parse(t.teasers) : []
     }));
 
     // 3. Fetch user feedback history

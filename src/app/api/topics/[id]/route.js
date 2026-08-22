@@ -26,6 +26,7 @@ export async function GET(request, { params }) {
       id: topicDoc.$id,
       body: JSON.parse(topicDoc.body || '[]'),
       resources: topicDoc.resources ? JSON.parse(topicDoc.resources) : [],
+      teasers: topicDoc.teasers ? JSON.parse(topicDoc.teasers) : [],
       feedback: feedbackList.documents
     };
 
@@ -62,6 +63,7 @@ export async function PUT(request, { params }) {
     if (body.closingFact !== undefined) data.closingFact = body.closingFact;
     if (body.imageUrl !== undefined) data.imageUrl = body.imageUrl;
     if (body.resources !== undefined) data.resources = JSON.stringify(body.resources);
+    if (body.teasers !== undefined) data.teasers = JSON.stringify(body.teasers);
 
     const result = await databases.updateDocument(DB_ID, 'topics', id, data);
 

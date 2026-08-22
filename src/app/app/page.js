@@ -17,6 +17,7 @@ function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [countdown, setCountdown] = useState('00:00:00');
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [currentTeaserIndex, setCurrentTeaserIndex] = useState(0);
 
   const [ratingStep, setRatingStep] = useState(0);
   const [ratingData, setRatingData] = useState({
@@ -268,6 +269,45 @@ function AppContent() {
     return () => clearInterval(iv);
   }, [screen, isReady, profile]);
 
+  // Teaser UI rotation
+  useEffect(() => {
+    if (screen === 'home' && isReady && topic?.teasers?.length > 0) {
+      const iv = setInterval(() => {
+        setCurrentTeaserIndex(prev => (prev + 1) % topic.teasers.length);
+      }, 7000); // rotate every 7 seconds
+      return () => clearInterval(iv);
+    }
+  }, [screen, isReady, topic]);
+
+  // Periodic Notifications
+  useEffect(() => {
+    if (screen === 'home' && isReady && profile?.notificationsEnabled !== false) {
+      // 90 minutes = 5400000 ms
+      const interval = setInterval(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          let bodyText = 'Your daily TOT is ready.';
+          if (topic?.teasers?.length > 0) {
+            bodyText = topic.teasers[Math.floor(Math.random() * topic.teasers.length)];
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification('Time to read!', {
+                body: bodyText,
+                icon: '/logo_black.png'
+              });
+            });
+          } else {
+            new Notification('Time to read!', {
+              body: bodyText,
+              icon: '/logo.png'
+            });
+          }
+        }
+      }, 5400000);
+      return () => clearInterval(interval);
+    }
+  }, [screen, isReady, profile, topic]);
+
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
     if (scrollHeight === clientHeight) { setScrollProgress(100); return; }
@@ -411,6 +451,26 @@ function AppContent() {
                   </span>
                   Subscription & Billing
                 </button>
+                <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '0.5rem 1rem' }} />
+                <div className={styles.menuItem} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span className={styles.menuItemIcon}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                      </svg>
+                    </span>
+                    <span>Push Notifications</span>
+                  </div>
+                  <label className={styles.toggleSwitch}>
+                    <input 
+                      type="checkbox" 
+                      checked={profile?.notificationsEnabled !== false} 
+                      onChange={e => updateProfile({ notificationsEnabled: e.target.checked })}
+                    />
+                    <span className={styles.slider}></span>
+                  </label>
+                </div>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '0.5rem 1rem' }} />
                 <button className={styles.menuItem} onClick={() => logout(true)} style={{ color: '#ff6b6b' }}>
                   <span className={styles.menuItemIcon}>
@@ -582,8 +642,12 @@ function AppContent() {
 
               {isReady ? (
                 <>
-                  <h2 className="t-display" style={{ color: 'var(--amber)' }}>Your topic is ready</h2>
-                  <p className="t-body">A fresh read, just for you.</p>
+                  <h2 className="t-display" style={{ color: 'var(--amber)' }}>
+                    {topic?.teasers?.length > 0 ? "Read now" : "Your topic is ready"}
+                  </h2>
+                  <p className="t-body" style={{ minHeight: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {topic?.teasers?.length > 0 ? topic.teasers[currentTeaserIndex] : "A fresh read, just for you."}
+                  </p>
                   <div className={styles.actions} style={{ marginTop: '2rem' }}>
                     <button className="btn btn-primary btn-large btn-full" onClick={() => setScreen('reading')}>
                       Start Reading
@@ -791,6 +855,13 @@ function AppContent() {
               <div style={{ marginTop: '3rem', width: '100%' }}>
                 <button className="btn btn-primary btn-large btn-full" onClick={() => setScreen('home')}>
                   See you tomorrow
+                </button>
+                <button 
+                  className="btn btn-full" 
+                  onClick={() => setScreen('reading')} 
+                  style={{ marginTop: '1rem', background: 'transparent', color: 'var(--white-60)' }}
+                >
+                  Check back the article
                 </button>
               </div>
             </div>
