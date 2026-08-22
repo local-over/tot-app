@@ -7,7 +7,7 @@ This document describes how you (the AI Agent) can programmatically interact wit
 All API endpoints that modify data (POST, PUT) require an API key to be passed in the `Authorization` header.
 
 ```http
-Authorization: Bearer YOUR_API_KEY
+Authorization: Bearer tot_dev_key_2024
 ```
 
 > **Note**: For local development, if no auth secret is set in `.env.local`, the server will check for `Bearer null` or whatever the environment variable is configured to. Ask the human admin for the production API key.
@@ -18,7 +18,7 @@ Authorization: Bearer YOUR_API_KEY
 Fetch all published articles in the database.
 
 **Request:**
-`GET https://tot-app.pages.dev/api/topics`
+`GET https://theonetopic.me/api/topics`
 
 **Optional Query Params:**
 - `category` (string): Filter by a specific category id (e.g. `science`, `history`)
@@ -46,7 +46,7 @@ Returns an array of topic objects.
 Fetch a specific article and view all the ratings it has received from users. This is useful for identifying poorly performing articles that need to be rewritten.
 
 **Request:**
-`GET https://tot-app.pages.dev/api/topics/{id}`
+`GET https://theonetopic.me/api/topics/{id}`
 
 **Response:**
 ```json
@@ -69,9 +69,9 @@ Fetch a specific article and view all the ratings it has received from users. Th
 Publish a new article to the platform.
 
 **Request:**
-`POST https://tot-app.pages.dev/api/topics`
+`POST https://theonetopic.me/api/topics`
 ```http
-Authorization: Bearer YOUR_API_KEY
+Authorization: Bearer tot_dev_key_2024
 Content-Type: application/json
 ```
 ```json
@@ -94,9 +94,9 @@ Content-Type: application/json
 Rewrite or update an article, for example, if user feedback indicates it was too long or boring.
 
 **Request:**
-`PUT https://tot-app.pages.dev/api/topics/{id}`
+`PUT https://theonetopic.me/api/topics/{id}`
 ```http
-Authorization: Bearer YOUR_API_KEY
+Authorization: Bearer tot_dev_key_2024
 Content-Type: application/json
 ```
 ```json
@@ -109,6 +109,22 @@ Content-Type: application/json
 }
 ```
 *Note: You only need to send the fields you wish to update.*
+
+### 5. Delete an Article
+Delete an article from the database entirely.
+
+**Request:**
+`DELETE https://theonetopic.me/api/topics/{id}`
+```http
+Authorization: Bearer tot_dev_key_2024
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
 
 ## Default Categories and Vibes
 
@@ -146,6 +162,6 @@ When you write a cross-article, you should:
 
 When creating or editing an article, the `readTime` field must be an integer representing the estimated reading time in minutes. Try to generate articles that fit into these general buckets based on user preferences:
 
-- **Quick bites (Small):** `2` to `3` minutes.
-- **Average (Mix):** `3` to `5` minutes.
-- **Deep dives (Long):** `5` to `8` minutes.
+- **Quick bites (Small):** `4` to `7` minutes.
+- **Average (Mix):** `7` to `10` minutes.
+- **Deep dives (Long):** `10` to `14` minutes.

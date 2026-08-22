@@ -228,9 +228,6 @@ function AppContent() {
 
       let target = new Date();
       target.setHours(targetHour, 0, 0, 0);
-      if (now > target && (now - target > 3600000)) {
-        target.setDate(target.getDate() + 1);
-      }
 
       const diff = target - now;
       if (diff <= 0) { 
